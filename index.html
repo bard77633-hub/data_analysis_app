@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analysis Challenge</title>
+    
+    <!-- Polyfill for libraries expecting Node.js process.env -->
+    <script>
+        window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+
+    <!-- Import Map for consistent dependency resolution -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "htm": "https://esm.sh/htm@3.1.1",
+    "recharts": "https://esm.sh/recharts@2.12.7?deps=react@18.2.0,react-dom@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+  }
+}
+</script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#3b82f6', // X-axis theme
+                            green: '#10b981', // Y-axis theme
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="./styles.css">
+
+    <!-- Preload critical modules -->
+    <link rel="modulepreload" href="https://esm.sh/react@18.2.0">
+    <link rel="modulepreload" href="https://esm.sh/react-dom@18.2.0/client">
+    <link rel="modulepreload" href="https://esm.sh/htm@3.1.1">
+    <link rel="modulepreload" href="https://esm.sh/recharts@2.12.7?deps=react@18.2.0,react-dom@18.2.0">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen overflow-hidden">
+    <div id="root" class="h-full flex flex-col"></div>
+
+    <!-- Main Application Script -->
+    <script type="module" src="./app.js"></script>
+</body>
+</html>

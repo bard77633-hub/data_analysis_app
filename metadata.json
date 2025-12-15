@@ -1,0 +1,5 @@
+{
+  "name": "データ分析ver2Data Analysis Challenge",
+  "description": "高校情報I向け データ活用・分析学習支援ツール。散布図、相関分析、回帰分析をインタラクティブに学習できます。",
+  "requestFramePermissions": []
+}
