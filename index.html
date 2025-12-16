@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Data Analysis Challenge</title>
     
     <!-- Polyfill for libraries expecting Node.js process.env -->
@@ -14,9 +15,9 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@19.0.0-rc.0?dev",
-    "react-dom": "https://esm.sh/react-dom@19.0.0-rc.0?dev",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client?dev",
+    "react": "https://esm.sh/react@19.0.0-rc.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0-rc.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client",
     "htm": "https://esm.sh/htm@3.1.1",
     "recharts": "https://esm.sh/recharts@2.13.0?deps=react@19.0.0-rc.0,react-dom@19.0.0-rc.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
@@ -45,8 +46,8 @@
     <link rel="stylesheet" href="./styles.css">
 
     <!-- Preload critical modules -->
-    <link rel="modulepreload" href="https://esm.sh/react@19.0.0-rc.0?dev">
-    <link rel="modulepreload" href="https://esm.sh/react-dom@19.0.0-rc.0/client?dev">
+    <link rel="modulepreload" href="https://esm.sh/react@19.0.0-rc.0">
+    <link rel="modulepreload" href="https://esm.sh/react-dom@19.0.0-rc.0/client">
     <link rel="modulepreload" href="https://esm.sh/htm@3.1.1">
     <link rel="modulepreload" href="https://esm.sh/recharts@2.13.0?deps=react@19.0.0-rc.0,react-dom@19.0.0-rc.0">
 </head>
