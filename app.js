@@ -683,7 +683,7 @@ const App = () => {
                     <${Card} className="h-full min-h-[400px] lg:min-h-0">
                         <div class="h-full flex flex-col">
                             <div class="flex justify-between items-center mb-4 px-2">
-                                <h2 class="font-bold text-gray-800 text-lg">散布図と回帰直線</h2>
+                                <h2 class="font-bold text-gray-800 text-lg">散布図: <span class="text-green-600">${yColumn.label}</span> vs <span class="text-blue-600">${xColumn.label}</span></h2>
                                 <div class="flex items-center gap-4 text-xs md:text-sm">
                                     <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-indigo-500 rounded-full mr-1 md:mr-2"></span>実測値</div>
                                     <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-gray-300 rounded-full mr-1 md:mr-2"></span>除外値</div>
