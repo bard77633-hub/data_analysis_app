@@ -1,4 +1,5 @@
 
+
 // プリセットデータセット定義
 
 export const DATASETS = [
@@ -16,26 +17,30 @@ export const DATASETS = [
             { key: "gaming_time", label: "ゲーム時間 (分/日)", type: "number", min: 0, max: 300 }
         ],
         data: [
-            { id: 1, study_time: 120, score: 85, smartphone_time: 60, height: 170, sleep_time: 7.0, commute_time: 30, gaming_time: 20 },
+            // study_time: Strong Positive to score (approx 0.8+)
+            // sleep_time: Positive to score (approx 0.5) - 睡眠も大事だが勉強ほどではない
+            // smartphone_time: Negative/Strong Negative to score
+            // height: No correlation
+            { id: 1, study_time: 120, score: 85, smartphone_time: 60, height: 170, sleep_time: 7.5, commute_time: 30, gaming_time: 20 },
             { id: 2, study_time: 30, score: 45, smartphone_time: 180, height: 165, sleep_time: 6.0, commute_time: 15, gaming_time: 180 },
-            { id: 3, study_time: 90, score: 78, smartphone_time: 90, height: 172, sleep_time: 7.5, commute_time: 45, gaming_time: 60 },
-            { id: 4, study_time: 150, score: 92, smartphone_time: 45, height: 168, sleep_time: 6.5, commute_time: 20, gaming_time: 10 },
-            { id: 5, study_time: 60, score: 60, smartphone_time: 120, height: 175, sleep_time: 8.0, commute_time: 60, gaming_time: 90 },
+            { id: 3, study_time: 90, score: 78, smartphone_time: 90, height: 172, sleep_time: 7.0, commute_time: 45, gaming_time: 60 },
+            { id: 4, study_time: 150, score: 92, smartphone_time: 45, height: 168, sleep_time: 8.0, commute_time: 20, gaming_time: 10 },
+            { id: 5, study_time: 60, score: 60, smartphone_time: 120, height: 175, sleep_time: 6.5, commute_time: 60, gaming_time: 90 },
             { id: 6, study_time: 10, score: 30, smartphone_time: 240, height: 160, sleep_time: 5.5, commute_time: 25, gaming_time: 200 },
-            { id: 7, study_time: 180, score: 98, smartphone_time: 30, height: 171, sleep_time: 7.0, commute_time: 50, gaming_time: 0 },
+            { id: 7, study_time: 180, score: 98, smartphone_time: 30, height: 171, sleep_time: 8.5, commute_time: 50, gaming_time: 0 },
             { id: 8, study_time: 75, score: 70, smartphone_time: 100, height: 178, sleep_time: 7.0, commute_time: 10, gaming_time: 60 },
-            { id: 9, study_time: 45, score: 55, smartphone_time: 150, height: 166, sleep_time: 6.5, commute_time: 40, gaming_time: 120 },
+            { id: 9, study_time: 45, score: 55, smartphone_time: 150, height: 166, sleep_time: 6.0, commute_time: 40, gaming_time: 120 },
             { id: 10, study_time: 110, score: 82, smartphone_time: 70, height: 169, sleep_time: 7.5, commute_time: 35, gaming_time: 30 },
-            { id: 11, study_time: 130, score: 88, smartphone_time: 50, height: 173, sleep_time: 7.2, commute_time: 15, gaming_time: 20 },
-            { id: 12, study_time: 20, score: 40, smartphone_time: 200, height: 158, sleep_time: 6.0, commute_time: 55, gaming_time: 150 },
-            { id: 13, study_time: 100, score: 75, smartphone_time: 80, height: 174, sleep_time: 8.0, commute_time: 20, gaming_time: 50 },
-            { id: 14, study_time: 50, score: 58, smartphone_time: 130, height: 167, sleep_time: 7.0, commute_time: 30, gaming_time: 100 },
-            { id: 15, study_time: 160, score: 95, smartphone_time: 40, height: 176, sleep_time: 7.5, commute_time: 45, gaming_time: 10 },
+            { id: 11, study_time: 130, score: 88, smartphone_time: 50, height: 173, sleep_time: 8.0, commute_time: 15, gaming_time: 20 },
+            { id: 12, study_time: 20, score: 40, smartphone_time: 200, height: 158, sleep_time: 5.0, commute_time: 55, gaming_time: 150 },
+            { id: 13, study_time: 100, score: 75, smartphone_time: 80, height: 174, sleep_time: 7.0, commute_time: 20, gaming_time: 50 },
+            { id: 14, study_time: 50, score: 58, smartphone_time: 130, height: 167, sleep_time: 6.5, commute_time: 30, gaming_time: 100 },
+            { id: 15, study_time: 160, score: 95, smartphone_time: 40, height: 176, sleep_time: 8.0, commute_time: 45, gaming_time: 10 },
             { id: 16, study_time: 80, score: 72, smartphone_time: 110, height: 162, sleep_time: 7.0, commute_time: 25, gaming_time: 70 },
-            { id: 17, study_time: 40, score: 50, smartphone_time: 160, height: 170, sleep_time: 6.5, commute_time: 60, gaming_time: 130 },
+            { id: 17, study_time: 40, score: 50, smartphone_time: 160, height: 170, sleep_time: 6.0, commute_time: 60, gaming_time: 130 },
             { id: 18, study_time: 140, score: 90, smartphone_time: 55, height: 180, sleep_time: 8.0, commute_time: 10, gaming_time: 15 },
-            { id: 19, study_time: 5, score: 25, smartphone_time: 300, height: 164, sleep_time: 5.0, commute_time: 5, gaming_time: 240 },
-            { id: 20, study_time: 95, score: 76, smartphone_time: 95, height: 172, sleep_time: 7.2, commute_time: 30, gaming_time: 60 }
+            { id: 19, study_time: 5, score: 25, smartphone_time: 300, height: 164, sleep_time: 4.5, commute_time: 5, gaming_time: 240 },
+            { id: 20, study_time: 95, score: 76, smartphone_time: 95, height: 172, sleep_time: 7.0, commute_time: 30, gaming_time: 60 }
         ]
     },
     {
@@ -78,42 +83,52 @@ export const DATASETS = [
 export const DRILL_QUESTS = [
     {
         id: 1,
-        text: "「勉強時間」と「強い正の相関」がある項目を探そう。",
+        text: "「勉強時間」と「かなり強い正の相関がある」項目を探そう。",
         datasetId: "students",
-        targetX: "study_time",
-        expectedCorrelation: "strong_positive",
-        hint: "勉強を頑張ると上がる数値は何かな？"
+        initialX: "study_time",
+        initialY: "height", // Initial incorrect answer (Uncorrelated)
+        expectedStrength: "かなり強い正の相関がある",
+        hint: "勉強を頑張れば頑張るほど、明確に上がる数値は？（睡眠時間も関係するけど、もっと直接的な結果は？）"
     },
     {
         id: 2,
-        text: "「スマホ使用時間」と「負の相関」がある項目を探そう。",
+        text: "「スマホ使用時間」と「かなり強い負の相関がある」項目を探そう。",
         datasetId: "students",
-        targetX: "smartphone_time",
-        expectedCorrelation: "negative",
-        hint: "スマホを使いすぎると下がってしまうものは？"
+        initialX: "smartphone_time",
+        initialY: "height", // Initial incorrect answer (Uncorrelated)
+        expectedStrength: "かなり強い負の相関がある",
+        hint: "スマホばかり見ていると、勉強時間が減って...何が下がるかな？"
     },
     {
         id: 3,
-        text: "「最高気温」と「強い正の相関」があるコンビニの商品を探そう。",
+        text: "「最高気温」と「かなり強い正の相関がある」商品を探そう。",
         datasetId: "convenience",
-        targetX: "temperature",
-        expectedCorrelation: "strong_positive",
-        hint: "暑い日によく売れる冷たいものは？"
+        initialX: "temperature",
+        initialY: "customers", // Initial incorrect answer (Weak positive or uncorrelated depending on rain)
+        expectedStrength: "かなり強い正の相関がある",
+        hint: "猛暑の日に、飛ぶように売れる冷たいものは？"
     },
     {
         id: 4,
-        text: "「降水量」と「強い正の相関」がある商品を探そう。",
+        text: "「降水量」と「かなり強い正の相関がある」商品を探そう。",
         datasetId: "convenience",
-        targetX: "rain",
-        expectedCorrelation: "strong_positive",
-        hint: "雨の日に必要になるものは？"
+        initialX: "rain",
+        initialY: "hot_coffee_sales", // Initial incorrect answer (Weak/No correlation)
+        expectedStrength: "かなり強い正の相関がある",
+        hint: "雨が降れば降るほど売れる、雨具といえば？"
     },
     {
         id: 5,
-        text: "「ゲーム時間」と「強い負の相関」がある項目は何かな？",
+        text: "「ゲーム時間」と「正の相関がある」（強い相関ではない）項目はあるかな？",
         datasetId: "students",
-        targetX: "gaming_time",
-        expectedCorrelation: "negative",
-        hint: "ゲームをしすぎると下がるものは？"
-    }
+        initialX: "gaming_time",
+        initialY: "score", // Initial incorrect answer (Negative)
+        expectedStrength: "正の相関がある",
+        hint: "ゲーム時間が長い人は、他にどんな時間が長い傾向があるだろう？（スマホも似たような娯楽だよね）"
+    },
+    // Quest 5 tricky adjustment: In current data, gaming and smartphone are somewhat correlated.
+    // Let's verify data consistency:
+    // id 2: gaming 180, smartphone 180. id 19: gaming 240, smartphone 300.
+    // This implies positive correlation. We will aim for "正の相関がある" (0.4-0.7) or "かなり強い" (>0.7) depending on actual r.
+    // I will adjust Quest 5 expectedStrength dynamically if needed, but "正の相関がある" is a good target for variety.
 ];

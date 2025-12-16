@@ -341,8 +341,10 @@ const AnalysisPanel = ({ xLabel, yLabel, correlation, regression, strength, acti
                     <div class="text-right flex justify-between items-center">
                         <span class="text-xs text-gray-500">n = ${activeCount} / ${totalCount}</span>
                         <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full 
-                            ${strength.includes('強') ? 'bg-red-100 text-red-800' : 
-                              strength.includes('なし') ? 'bg-gray-200 text-gray-800' : 'bg-green-100 text-green-800'}">
+                            ${strength.includes('かなり強い') ? 'bg-purple-100 text-purple-800' : 
+                              strength.includes('正の') ? 'bg-red-100 text-red-800' :
+                              strength.includes('負の') ? 'bg-green-100 text-green-800' : 
+                              'bg-gray-200 text-gray-800'}">
                             ${strength}
                         </span>
                     </div>
@@ -496,6 +498,17 @@ const App = () => {
         };
     }, [dataset, xColumn, yColumn, excludedIds]);
 
+    // Initialize Drill Quest (Force incorrect selection initially)
+    useEffect(() => {
+        if (mode === 'drill') {
+            const quest = DRILL_QUESTS[currentQuestIndex];
+            setDatasetId(quest.datasetId);
+            setXKey(quest.initialX);
+            setYKey(quest.initialY);
+            setDrillFeedback(null);
+        }
+    }, [currentQuestIndex, mode]);
+
     // Handlers
     const togglePoint = (id) => {
         setExcludedIds(prev => 
@@ -548,20 +561,14 @@ const App = () => {
 
     const handleDrillSubmit = () => {
         const quest = DRILL_QUESTS[currentQuestIndex];
-        let isCorrect = false;
-
+        
         // Ensure dataset is correct first
         if (datasetId !== quest.datasetId) {
              setDrillFeedback('incorrect_dataset');
              return;
         }
 
-        if (quest.datasetId === datasetId) {
-             if (quest.expectedCorrelation === "strong_positive" && stats.strength === "強い正の相関") isCorrect = true;
-             if (quest.expectedCorrelation === "negative" && stats.strength.includes("負")) isCorrect = true;
-        }
-
-        if (isCorrect) {
+        if (stats.strength === quest.expectedStrength) {
             setDrillFeedback('correct');
         } else {
             setDrillFeedback('incorrect');
@@ -582,12 +589,12 @@ const App = () => {
         setCurrentQuestIndex(0);
         setDrillFeedback(null);
         setMode('drill');
-        // Reset to first quest dataset to be helpful
-        setDatasetId(DRILL_QUESTS[0].datasetId);
+        // Reset to first quest dataset logic is handled by useEffect on currentQuestIndex
     };
 
-    // Auto-select first columns & reset selection when dataset changes
+    // Safety check to ensure keys are valid when dataset manually changed (Exploration mode mostly)
     useEffect(() => {
+        // Only override if current keys don't exist in new dataset (avoid overriding drill initialization)
         if (!dataset.columns.find(c => c.key === xKey)) setXKey(dataset.columns[0].key);
         if (!dataset.columns.find(c => c.key === yKey)) setYKey(dataset.columns.length > 1 ? dataset.columns[1].key : dataset.columns[0].key);
         setExcludedIds([]); // Reset filters

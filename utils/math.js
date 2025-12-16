@@ -1,3 +1,4 @@
+
 // 統計計算用ユーティリティ
 
 /**
@@ -64,14 +65,16 @@ export const calculateRegression = (xArray, yArray) => {
 };
 
 /**
- * 相関の強さを判定
+ * 相関の強さを判定（7段階評価）
  */
 export const getCorrelationStrength = (r) => {
-    const absR = Math.abs(r);
-    if (absR >= 0.7) return r > 0 ? "強い正の相関" : "強い負の相関";
-    if (absR >= 0.4) return r > 0 ? "正の相関あり" : "負の相関あり";
-    if (absR >= 0.2) return r > 0 ? "弱い正の相関" : "弱い負の相関";
-    return "相関なし";
+    if (r >= 0.7) return "かなり強い正の相関がある";
+    if (r >= 0.4) return "正の相関がある";
+    if (r >= 0.2) return "弱い正の相関がある";
+    if (r > -0.2) return "ほとんど相関がない";
+    if (r > -0.4) return "弱い負の相関がある";
+    if (r > -0.7) return "負の相関がある";
+    return "かなり強い負の相関がある";
 };
 
 /**
