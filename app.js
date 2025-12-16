@@ -16,7 +16,7 @@ const html = htm.bind(React.createElement);
  * 汎用カードコンポーネント
  */
 const Card = ({ title, children, className = "" }) => html`
-    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full border border-gray-100 ${className}">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-100 ${className}">
         ${title && html`<div class="px-4 py-3 bg-gray-50 border-b border-gray-100 font-bold text-gray-700">${title}</div>`}
         <div class="p-4 flex-1 overflow-auto">
             ${children}
@@ -605,7 +605,7 @@ const App = () => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">データソース</label>
                                 <select 
-                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-gray-50"
+                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white text-gray-900"
                                     value=${datasetId}
                                     onChange=${(e) => setDatasetId(e.target.value)}
                                 >
@@ -631,12 +631,12 @@ const App = () => {
                         </div>
                     </${Card}>
 
-                    <${Card} title="変数選択" className="flex-1">
+                    <${Card} title="変数選択" className="flex-1 lg:h-full min-h-[300px] lg:min-h-0">
                         <div class="space-y-4">
                             <div class="p-3 bg-blue-50 rounded-md border border-blue-100">
                                 <label class="block text-sm font-bold text-blue-800 mb-1">X軸 (説明変数)</label>
                                 <select 
-                                    class="block w-full border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
+                                    class="block w-full border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border bg-white text-gray-900"
                                     value=${xKey}
                                     onChange=${(e) => setXKey(e.target.value)}
                                 >
@@ -662,7 +662,7 @@ const App = () => {
                             <div class="p-3 bg-green-50 rounded-md border border-green-100">
                                 <label class="block text-sm font-bold text-green-800 mb-1">Y軸 (目的変数)</label>
                                 <select 
-                                    class="block w-full border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 sm:text-sm p-2 border"
+                                    class="block w-full border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 sm:text-sm p-2 border bg-white text-gray-900"
                                     value=${yKey}
                                     onChange=${(e) => setYKey(e.target.value)}
                                 >
