@@ -1,3 +1,4 @@
+
 // プリセットデータセット定義
 
 export const DATASETS = [
@@ -10,29 +11,31 @@ export const DATASETS = [
             { key: "score", label: "テスト点数 (点)", type: "number", min: 0, max: 100 },
             { key: "smartphone_time", label: "スマホ使用時間 (分/日)", type: "number", min: 0, max: 300 },
             { key: "height", label: "身長 (cm)", type: "number", min: 150, max: 190 },
-            { key: "sleep_time", label: "睡眠時間 (時間)", type: "number", min: 4, max: 10 }
+            { key: "sleep_time", label: "睡眠時間 (時間)", type: "number", min: 4, max: 10 },
+            { key: "commute_time", label: "通学時間 (分)", type: "number", min: 0, max: 120 },
+            { key: "gaming_time", label: "ゲーム時間 (分/日)", type: "number", min: 0, max: 300 }
         ],
         data: [
-            { id: 1, study_time: 120, score: 85, smartphone_time: 60, height: 170, sleep_time: 7.0 },
-            { id: 2, study_time: 30, score: 45, smartphone_time: 180, height: 165, sleep_time: 6.0 },
-            { id: 3, study_time: 90, score: 78, smartphone_time: 90, height: 172, sleep_time: 7.5 },
-            { id: 4, study_time: 150, score: 92, smartphone_time: 45, height: 168, sleep_time: 6.5 },
-            { id: 5, study_time: 60, score: 60, smartphone_time: 120, height: 175, sleep_time: 8.0 },
-            { id: 6, study_time: 10, score: 30, smartphone_time: 240, height: 160, sleep_time: 5.5 },
-            { id: 7, study_time: 180, score: 98, smartphone_time: 30, height: 171, sleep_time: 7.0 },
-            { id: 8, study_time: 75, score: 70, smartphone_time: 100, height: 178, sleep_time: 7.0 },
-            { id: 9, study_time: 45, score: 55, smartphone_time: 150, height: 166, sleep_time: 6.5 },
-            { id: 10, study_time: 110, score: 82, smartphone_time: 70, height: 169, sleep_time: 7.5 },
-            { id: 11, study_time: 130, score: 88, smartphone_time: 50, height: 173, sleep_time: 7.2 },
-            { id: 12, study_time: 20, score: 40, smartphone_time: 200, height: 158, sleep_time: 6.0 },
-            { id: 13, study_time: 100, score: 75, smartphone_time: 80, height: 174, sleep_time: 8.0 },
-            { id: 14, study_time: 50, score: 58, smartphone_time: 130, height: 167, sleep_time: 7.0 },
-            { id: 15, study_time: 160, score: 95, smartphone_time: 40, height: 176, sleep_time: 7.5 },
-            { id: 16, study_time: 80, score: 72, smartphone_time: 110, height: 162, sleep_time: 7.0 },
-            { id: 17, study_time: 40, score: 50, smartphone_time: 160, height: 170, sleep_time: 6.5 },
-            { id: 18, study_time: 140, score: 90, smartphone_time: 55, height: 180, sleep_time: 8.0 },
-            { id: 19, study_time: 5, score: 25, smartphone_time: 300, height: 164, sleep_time: 5.0 },
-            { id: 20, study_time: 95, score: 76, smartphone_time: 95, height: 172, sleep_time: 7.2 }
+            { id: 1, study_time: 120, score: 85, smartphone_time: 60, height: 170, sleep_time: 7.0, commute_time: 30, gaming_time: 20 },
+            { id: 2, study_time: 30, score: 45, smartphone_time: 180, height: 165, sleep_time: 6.0, commute_time: 15, gaming_time: 180 },
+            { id: 3, study_time: 90, score: 78, smartphone_time: 90, height: 172, sleep_time: 7.5, commute_time: 45, gaming_time: 60 },
+            { id: 4, study_time: 150, score: 92, smartphone_time: 45, height: 168, sleep_time: 6.5, commute_time: 20, gaming_time: 10 },
+            { id: 5, study_time: 60, score: 60, smartphone_time: 120, height: 175, sleep_time: 8.0, commute_time: 60, gaming_time: 90 },
+            { id: 6, study_time: 10, score: 30, smartphone_time: 240, height: 160, sleep_time: 5.5, commute_time: 25, gaming_time: 200 },
+            { id: 7, study_time: 180, score: 98, smartphone_time: 30, height: 171, sleep_time: 7.0, commute_time: 50, gaming_time: 0 },
+            { id: 8, study_time: 75, score: 70, smartphone_time: 100, height: 178, sleep_time: 7.0, commute_time: 10, gaming_time: 60 },
+            { id: 9, study_time: 45, score: 55, smartphone_time: 150, height: 166, sleep_time: 6.5, commute_time: 40, gaming_time: 120 },
+            { id: 10, study_time: 110, score: 82, smartphone_time: 70, height: 169, sleep_time: 7.5, commute_time: 35, gaming_time: 30 },
+            { id: 11, study_time: 130, score: 88, smartphone_time: 50, height: 173, sleep_time: 7.2, commute_time: 15, gaming_time: 20 },
+            { id: 12, study_time: 20, score: 40, smartphone_time: 200, height: 158, sleep_time: 6.0, commute_time: 55, gaming_time: 150 },
+            { id: 13, study_time: 100, score: 75, smartphone_time: 80, height: 174, sleep_time: 8.0, commute_time: 20, gaming_time: 50 },
+            { id: 14, study_time: 50, score: 58, smartphone_time: 130, height: 167, sleep_time: 7.0, commute_time: 30, gaming_time: 100 },
+            { id: 15, study_time: 160, score: 95, smartphone_time: 40, height: 176, sleep_time: 7.5, commute_time: 45, gaming_time: 10 },
+            { id: 16, study_time: 80, score: 72, smartphone_time: 110, height: 162, sleep_time: 7.0, commute_time: 25, gaming_time: 70 },
+            { id: 17, study_time: 40, score: 50, smartphone_time: 160, height: 170, sleep_time: 6.5, commute_time: 60, gaming_time: 130 },
+            { id: 18, study_time: 140, score: 90, smartphone_time: 55, height: 180, sleep_time: 8.0, commute_time: 10, gaming_time: 15 },
+            { id: 19, study_time: 5, score: 25, smartphone_time: 300, height: 164, sleep_time: 5.0, commute_time: 5, gaming_time: 240 },
+            { id: 20, study_time: 95, score: 76, smartphone_time: 95, height: 172, sleep_time: 7.2, commute_time: 30, gaming_time: 60 }
         ]
     },
     {
@@ -104,5 +107,13 @@ export const DRILL_QUESTS = [
         targetX: "rain",
         expectedCorrelation: "strong_positive",
         hint: "雨の日に必要になるものは？"
+    },
+    {
+        id: 5,
+        text: "「ゲーム時間」と「強い負の相関」がある項目は何かな？",
+        datasetId: "students",
+        targetX: "gaming_time",
+        expectedCorrelation: "negative",
+        hint: "ゲームをしすぎると下がるものは？"
     }
 ];
