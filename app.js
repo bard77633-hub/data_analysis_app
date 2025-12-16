@@ -426,13 +426,31 @@ const App = () => {
         
         // Handle empty selection
         if (xData.length === 0) {
-            return { correlation: 0, regression: { slope: 0, intercept: 0 }, strength: "データなし", activeCount: 0 };
+            return { 
+                correlation: 0, regression: { slope: 0, intercept: 0 }, strength: "データなし", activeCount: 0,
+                xStats: { min: 0, max: 0, mean: 0 }, yStats: { min: 0, max: 0, mean: 0 }
+            };
         }
 
         const r = MathUtils.calculateCorrelation(xData, yData);
         const reg = MathUtils.calculateRegression(xData, yData);
         const str = MathUtils.getCorrelationStrength(r);
-        return { correlation: r, regression: reg, strength: str, activeCount: xData.length };
+        
+        // Basic stats for variables (useful for selection context)
+        const calcStats = (arr) => ({
+            min: Math.min(...arr),
+            max: Math.max(...arr),
+            mean: MathUtils.calculateMean(arr)
+        });
+
+        return { 
+            correlation: r, 
+            regression: reg, 
+            strength: str, 
+            activeCount: xData.length,
+            xStats: calcStats(xData),
+            yStats: calcStats(yData)
+        };
     }, [dataset, xColumn, yColumn, excludedIds]);
 
     // Handlers
@@ -462,7 +480,6 @@ const App = () => {
         }));
 
         const rawData = lines.slice(1).map((line, idx) => {
-            // Split line but respect that CSV might have fewer cols than header sometimes? No, assume valid.
             const values = line.split(",").map(v => v.trim());
             const row = { id: idx + 1 };
             columns.forEach((col, i) => {
@@ -625,6 +642,11 @@ const App = () => {
                                 >
                                     ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                 </select>
+                                <div class="mt-2 text-xs text-blue-700 flex justify-between px-1">
+                                    <span>Min: ${stats.xStats.min}</span>
+                                    <span>Avg: ${stats.xStats.mean.toFixed(1)}</span>
+                                    <span>Max: ${stats.xStats.max}</span>
+                                </div>
                             </div>
 
                             <div class="flex justify-center items-center">
@@ -646,6 +668,11 @@ const App = () => {
                                 >
                                     ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                 </select>
+                                <div class="mt-2 text-xs text-green-700 flex justify-between px-1">
+                                    <span>Min: ${stats.yStats.min}</span>
+                                    <span>Avg: ${stats.yStats.mean.toFixed(1)}</span>
+                                    <span>Max: ${stats.yStats.max}</span>
+                                </div>
                             </div>
                         </div>
                     </${Card}>
