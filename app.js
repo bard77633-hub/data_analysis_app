@@ -840,7 +840,7 @@ const App = () => {
                                     <div class="flex items-center"><span class="w-4 h-1 md:w-8 bg-orange-500 mr-1 md:mr-2"></span>回帰直線</div>
                                 </div>
                             </div>
-                            <div class="flex-1 w-full min-h-0 relative" style=${{ minHeight: '300px' }}>
+                            <div class="flex-1 w-full min-h-0 relative" style=${{ minHeight: '300px', height: '100%', width: '100%' }}>
                                 <${ScatterVis} 
                                     data=${dataset.data} 
                                     xConfig=${xColumn} 
