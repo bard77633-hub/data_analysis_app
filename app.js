@@ -11,6 +11,63 @@ import * as MathUtils from './utils/math.js';
 
 const html = htm.bind(React.createElement);
 
+// --- Custom Hooks ---
+
+/**
+ * ドラッグ操作のためのカスタムフック (Pointer Events API使用)
+ * setPointerCaptureを使用することで、高速なドラッグや画面外への移動でも追従可能にします。
+ */
+const useDraggableWindow = (initialX, initialY) => {
+    // 画面サイズに応じて初期位置を調整（画面外に出ないように）
+    const getSafePosition = (x, y) => {
+        const maxX = window.innerWidth - 50;
+        const maxY = window.innerHeight - 50;
+        return {
+            x: Math.min(Math.max(0, x), maxX),
+            y: Math.min(Math.max(0, y), maxY)
+        };
+    };
+
+    const [position, setPosition] = useState(getSafePosition(initialX, initialY));
+    const isDragging = useRef(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
+
+    const onPointerDown = (e) => {
+        // ボタンや入力フォームでの操作はドラッグとみなさない
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') return;
+        
+        e.preventDefault(); // タッチ操作でのスクロール等を防ぐ
+        
+        isDragging.current = true;
+        dragOffset.current = {
+            x: e.clientX - position.x,
+            y: e.clientY - position.y
+        };
+        
+        // Pointer Captureを設定して、ポインタが要素外に出てもイベントを補足
+        e.currentTarget.setPointerCapture(e.pointerId);
+    };
+
+    const onPointerMove = (e) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+        
+        setPosition({
+            x: e.clientX - dragOffset.current.x,
+            y: e.clientY - dragOffset.current.y
+        });
+    };
+
+    const onPointerUp = (e) => {
+        if (isDragging.current) {
+            isDragging.current = false;
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+    };
+
+    return { position, setPosition, onPointerDown, onPointerMove, onPointerUp };
+};
+
 // --- Components ---
 
 /**
@@ -105,54 +162,11 @@ const DataInputModal = ({ onClose, onImport }) => {
 const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose }) => {
     // 初期位置をレスポンシブに調整
     const isMobile = window.innerWidth < 768;
-    const [position, setPosition] = useState(isMobile ? { x: 10, y: 100 } : { x: 20, y: 150 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const initialPos = isMobile ? { x: 10, y: 100 } : { x: 20, y: 150 };
+    
+    // カスタムフックを使用
+    const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
-
-    // Mouse Events
-    const handleMouseDown = (e) => {
-        setIsDragging(true);
-        setOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
-    };
-
-    // Touch Events
-    const handleTouchStart = (e) => {
-        const touch = e.touches[0];
-        setIsDragging(true);
-        setOffset({ x: touch.clientX - position.x, y: touch.clientY - position.y });
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            setPosition({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-        };
-        const handleMouseUp = () => setIsDragging(false);
-
-        const handleTouchMove = (e) => {
-            if (!isDragging) return;
-            // Prevent scrolling while dragging
-            if (e.cancelable) e.preventDefault();
-            const touch = e.touches[0];
-            setPosition({ x: touch.clientX - offset.x, y: touch.clientY - offset.y });
-        };
-        const handleTouchEnd = () => setIsDragging(false);
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove, { passive: false });
-            window.addEventListener('mouseup', handleMouseUp);
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-            window.addEventListener('touchend', handleTouchEnd);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchend', handleTouchEnd);
-        };
-    }, [isDragging, offset]);
 
     return html`
         <div 
@@ -162,20 +176,21 @@ const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose
                 left: position.x, 
                 width: isMinimized ? '200px' : '550px',
                 height: isMinimized ? 'auto' : '400px',
-                transition: isDragging ? 'none' : 'width 0.2s, height 0.2s'
+                touchAction: 'none' // ブラウザのスクロール等を無効化してドラッグを優先
             }}
         >
             <div 
                 class="bg-gray-800 text-white px-3 py-2 cursor-grab active:cursor-grabbing flex justify-between items-center select-none touch-none"
-                onMouseDown=${handleMouseDown}
-                onTouchStart=${handleTouchStart}
+                onPointerDown=${onPointerDown}
+                onPointerMove=${onPointerMove}
+                onPointerUp=${onPointerUp}
             >
                 <span class="text-sm font-bold">データ選択・一覧 (n=${data.length})</span>
                 <div class="flex gap-2">
-                    <button onClick=${() => setIsMinimized(!isMinimized)} class="hover:text-gray-300" onTouchEnd=${(e) => {e.stopPropagation(); setIsMinimized(!isMinimized);}}>
+                    <button onClick=${() => setIsMinimized(!isMinimized)} class="hover:text-gray-300" onPointerDown=${(e) => e.stopPropagation()}>
                         ${isMinimized ? '□' : '－'}
                     </button>
-                    <button onClick=${onClose} class="hover:text-red-300" onTouchEnd=${(e) => {e.stopPropagation(); onClose();}}>×</button>
+                    <button onClick=${onClose} class="hover:text-red-300" onPointerDown=${(e) => e.stopPropagation()}>×</button>
                 </div>
             </div>
             ${!isMinimized && html`
@@ -222,62 +237,16 @@ const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose
 const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext }) => {
     // 画面右上（スマホなら画面下部）に配置
     const isMobile = window.innerWidth < 768;
-    const [position, setPosition] = useState(isMobile ? { x: 16, y: window.innerHeight - 250 } : { x: window.innerWidth - 380, y: 80 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const initialPos = isMobile ? { x: 16, y: window.innerHeight - 250 } : { x: window.innerWidth - 380, y: 80 };
+    
+    // カスタムフックを使用
+    const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
     
     // 状態が変化したら自動展開
     useEffect(() => {
         setIsMinimized(false);
-        // Reset position on mobile when quest changes to ensure visibility? 
-        // Optional, but keeping position persistence is usually better UX unless offscreen.
     }, [quest.id, feedback]);
-
-    // Mouse Handlers
-    const handleMouseDown = (e) => {
-        if (e.target.closest('button')) return;
-        setIsDragging(true);
-        setOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
-    };
-
-    // Touch Handlers
-    const handleTouchStart = (e) => {
-        if (e.target.closest('button')) return;
-        const touch = e.touches[0];
-        setIsDragging(true);
-        setOffset({ x: touch.clientX - position.x, y: touch.clientY - position.y });
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            setPosition({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-        };
-        const handleMouseUp = () => setIsDragging(false);
-
-        const handleTouchMove = (e) => {
-            if (!isDragging) return;
-            if (e.cancelable) e.preventDefault();
-            const touch = e.touches[0];
-            setPosition({ x: touch.clientX - offset.x, y: touch.clientY - offset.y });
-        };
-        const handleTouchEnd = () => setIsDragging(false);
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove, { passive: false });
-            window.addEventListener('mouseup', handleMouseUp);
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-            window.addEventListener('touchend', handleTouchEnd);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-            window.removeEventListener('touchmove', handleTouchMove);
-            window.removeEventListener('touchend', handleTouchEnd);
-        };
-    }, [isDragging, offset]);
 
     const isCorrect = feedback === 'correct';
     
@@ -343,20 +312,22 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext }) =
                 top: position.y, 
                 left: position.x,
                 width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : '350px'),
-                maxHeight: '80vh'
+                maxHeight: '80vh',
+                touchAction: 'none'
             }}
         >
             <!-- Header (Drag Handle) -->
             <div 
                 class="px-4 py-2 bg-gradient-to-r from-slate-800 to-indigo-900 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
-                onMouseDown=${handleMouseDown}
-                onTouchStart=${handleTouchStart}
+                onPointerDown=${onPointerDown}
+                onPointerMove=${onPointerMove}
+                onPointerUp=${onPointerUp}
             >
                 <div class="flex items-center space-x-2">
                     <span class="text-xl">${icon}</span>
                     <span class="font-bold text-sm">MISSION ${index + 1}/${total}</span>
                 </div>
-                <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded" onTouchEnd=${(e) => {e.stopPropagation(); setIsMinimized(!isMinimized);}}>
+                <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded" onPointerDown=${(e) => e.stopPropagation()}>
                     ${isMinimized ? '□' : '－'}
                 </button>
             </div>
