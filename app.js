@@ -83,6 +83,283 @@ const Card = ({ title, children, className = "" }) => html`
 `;
 
 /**
+ * 解説モードコンポーネント
+ * 散布図の作り方から相関の見方までをステップバイステップで解説
+ */
+const TutorialMode = ({ onFinish }) => {
+    const [step, setStep] = useState(0);
+
+    // Step 1用のデモデータ
+    const demoData = [
+        { id: 1, temp: 25, sales: 150 },
+        { id: 2, temp: 30, sales: 280 },
+        { id: 3, temp: 35, sales: 400 },
+    ];
+    const [plotStep, setPlotStep] = useState(0); // 0:None, 1:Row1, 2:Row2...
+
+    // ページの定義
+    const pages = [
+        {
+            title: "はじめに：散布図（さんぷず）ってなに？",
+            content: html`
+                <div class="flex flex-col items-center justify-center h-full text-center space-y-6 animate-fade-in-up">
+                    <div class="text-6xl">📊</div>
+                    <p class="text-xl text-gray-700 leading-relaxed max-w-2xl">
+                        「気温が上がると、アイスが売れる」<br/>
+                        「勉強時間を増やすと、テストの点数が上がる」<br/><br/>
+                        こんな風に、<strong>「2つのデータに関係があるかな？」</strong>を調べるためのグラフが<br/>
+                        <span class="text-indigo-600 font-bold text-2xl">散布図（さんぷず）</span>です。
+                    </p>
+                </div>
+            `
+        },
+        {
+            title: "ステップ1：表からグラフを作ってみよう",
+            content: html`
+                <div class="flex flex-col lg:flex-row gap-8 h-full items-center justify-center animate-fade-in-up">
+                    <!-- Table -->
+                    <div class="w-full lg:w-1/3 bg-white p-4 rounded-lg shadow border border-gray-200">
+                        <h4 class="font-bold text-center mb-2 text-gray-600">あるお店のアイス売上</h4>
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr><th>気温(℃)</th><th>売上(個)</th></tr>
+                            </thead>
+                            <tbody>
+                                ${demoData.map((d, i) => html`
+                                    <tr class="border-b transition-colors duration-300 ${plotStep > i ? 'bg-indigo-100' : ''}">
+                                        <td class="p-2 text-center font-mono ${plotStep > i ? 'text-indigo-700 font-bold' : ''}">${d.temp}℃</td>
+                                        <td class="p-2 text-center font-mono ${plotStep > i ? 'text-green-700 font-bold' : ''}">${d.sales}個</td>
+                                    </tr>
+                                `)}
+                            </tbody>
+                        </table>
+                        <div class="mt-4 text-center">
+                            <button 
+                                onClick=${() => setPlotStep(prev => Math.min(prev + 1, 3))}
+                                disabled=${plotStep >= 3}
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm font-bold hover:bg-indigo-700 disabled:bg-gray-300 transition-all shadow-md active:scale-95"
+                            >
+                                ${plotStep >= 3 ? 'プロット完了！' : '1つずつ点を打つ ➡'}
+                            </button>
+                            <button 
+                                onClick=${() => setPlotStep(0)}
+                                class="ml-2 px-3 py-2 text-gray-500 hover:text-gray-700 text-sm underline"
+                            >
+                                リセット
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Graph Area (Custom SVG for clearer animation) -->
+                    <div class="w-full lg:w-1/2 aspect-video bg-white rounded-lg shadow border border-gray-200 relative p-6">
+                        <svg viewBox="0 0 400 300" class="w-full h-full overflow-visible">
+                            <!-- Axes -->
+                            <line x1="50" y1="250" x2="380" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
+                            <line x1="50" y1="250" x2="50" y2="20" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
+                            <text x="380" y="270" text-anchor="end" font-size="12" fill="#3b82f6" font-weight="bold">気温 (X)</text>
+                            <text x="40" y="20" text-anchor="end" font-size="12" fill="#10b981" font-weight="bold" writing-mode="tb">売上 (Y)</text>
+
+                            <!-- Points & Guides -->
+                            ${demoData.map((d, i) => {
+                                // Simple mapping for demo: Temp 20-40 -> x, Sales 0-500 -> y
+                                const x = 50 + ((d.temp - 20) / 20) * 300;
+                                const y = 250 - (d.sales / 500) * 230;
+                                const isVisible = plotStep > i;
+                                
+                                return html`
+                                    <g class="transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}">
+                                        <!-- Guide Lines -->
+                                        <line x1="${x}" y1="250" x2="${x}" y2="${y}" stroke="#3b82f6" stroke-dasharray="4" stroke-opacity="0.5" />
+                                        <line x1="50" y1="${y}" x2="${x}" y2="${y}" stroke="#10b981" stroke-dasharray="4" stroke-opacity="0.5" />
+                                        <!-- Point -->
+                                        <circle cx="${x}" cy="${y}" r="6" fill="#6366f1" stroke="white" stroke-width="2" />
+                                        <!-- Values -->
+                                        <text x="${x}" y="265" text-anchor="middle" font-size="10" fill="#3b82f6">${d.temp}</text>
+                                        <text x="35" y="${y+4}" text-anchor="end" font-size="10" fill="#10b981">${d.sales}</text>
+                                    </g>
+                                `;
+                            })}
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-center mt-4 text-gray-600">
+                    表の「横（X）」と「縦（Y）」の数値がぶつかる場所に、点を打っていきます。<br/>
+                    これを繰り返すと、データの「形」が見えてきます。
+                </p>
+            `
+        },
+        {
+            title: "ステップ2：形から関係を読み解く",
+            content: html`
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full items-center animate-fade-in-up">
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 flex flex-col items-center text-center h-full">
+                        <div class="h-32 w-full flex items-center justify-center mb-2">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                <line x1="15" y1="65" x2="85" y2="15" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="20" cy="60" r="2" fill="#ef4444" />
+                                <circle cx="35" cy="50" r="2" fill="#ef4444" />
+                                <circle cx="50" cy="40" r="2" fill="#ef4444" />
+                                <circle cx="65" cy="30" r="2" fill="#ef4444" />
+                                <circle cx="80" cy="20" r="2" fill="#ef4444" />
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-red-700 text-lg mb-2">正の相関</h4>
+                        <p class="text-sm text-gray-600">右上がり↗</p>
+                        <p class="text-xs text-gray-500 mt-2">「片方が増えると、もう片方も増える」関係。</p>
+                        <p class="text-xs font-bold text-red-600 mt-1">例：勉強時間と成績</p>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col items-center text-center h-full">
+                        <div class="h-32 w-full flex items-center justify-center mb-2">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                <line x1="15" y1="15" x2="85" y2="65" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="20" cy="20" r="2" fill="#10b981" />
+                                <circle cx="35" cy="30" r="2" fill="#10b981" />
+                                <circle cx="50" cy="40" r="2" fill="#10b981" />
+                                <circle cx="65" cy="50" r="2" fill="#10b981" />
+                                <circle cx="80" cy="60" r="2" fill="#10b981" />
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-green-700 text-lg mb-2">負の相関</h4>
+                        <p class="text-sm text-gray-600">右下がり↘</p>
+                        <p class="text-xs text-gray-500 mt-2">「片方が増えると、もう片方は減る」関係。</p>
+                        <p class="text-xs font-bold text-green-600 mt-1">例：スマホ時間と成績</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col items-center text-center h-full">
+                        <div class="h-32 w-full flex items-center justify-center mb-2">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                <circle cx="20" cy="50" r="2" fill="#666" />
+                                <circle cx="30" cy="20" r="2" fill="#666" />
+                                <circle cx="50" cy="60" r="2" fill="#666" />
+                                <circle cx="70" cy="30" r="2" fill="#666" />
+                                <circle cx="80" cy="65" r="2" fill="#666" />
+                                <circle cx="40" cy="40" r="2" fill="#666" />
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-gray-700 text-lg mb-2">相関なし</h4>
+                        <p class="text-sm text-gray-600">バラバラ∴</p>
+                        <p class="text-xs text-gray-500 mt-2">関係なさそう。</p>
+                        <p class="text-xs font-bold text-gray-600 mt-1">例：出席番号と成績</p>
+                    </div>
+                </div>
+            `
+        },
+        {
+            title: "ステップ3：相関の「強さ」と相関係数(r)",
+            content: html`
+                <div class="flex flex-col items-center justify-center h-full space-y-8 animate-fade-in-up">
+                    <div class="w-full max-w-3xl">
+                        <div class="flex justify-between text-sm text-gray-500 font-mono mb-2">
+                            <span>-1.0 (完全な負)</span>
+                            <span>0.0 (バラバラ)</span>
+                            <span>+1.0 (完全な正)</span>
+                        </div>
+                        <div class="relative h-6 w-full rounded-full bg-gradient-to-r from-green-400 via-gray-200 to-red-400 shadow-inner">
+                            <!-- Markers -->
+                            <div class="absolute top-0 bottom-0 w-0.5 bg-white left-1/2"></div>
+                            <div class="absolute top-0 bottom-0 w-0.5 bg-white left-[25%]"></div>
+                            <div class="absolute top-0 bottom-0 w-0.5 bg-white left-[75%]"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span class="w-1/4 text-center">強い負</span>
+                            <span class="w-1/4 text-center">弱い負</span>
+                            <span class="w-1/4 text-center">弱い正</span>
+                            <span class="w-1/4 text-center">強い正</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 p-6 rounded-xl border border-indigo-100 max-w-2xl text-center">
+                        <h3 class="font-bold text-indigo-900 text-lg mb-3">相関係数（そうかんけいすう：r）</h3>
+                        <p class="text-gray-700 mb-4">
+                            散布図の「点のまとまり具合」を数字にしたもの。<br/>
+                            <span class="font-bold bg-white px-2 py-1 rounded shadow-sm mx-1">1</span>に近いほど、一直線に並ぶ（強い正）。<br/>
+                            <span class="font-bold bg-white px-2 py-1 rounded shadow-sm mx-1">-1</span>に近いほど、逆向きに一直線に並ぶ（強い負）。<br/>
+                            <span class="font-bold bg-white px-2 py-1 rounded shadow-sm mx-1">0</span>に近いほど、関係がない。
+                        </p>
+                        <p class="text-sm text-indigo-600 font-bold">ドリルでは、この数字とグラフの形を見比べよう！</p>
+                    </div>
+                </div>
+            `
+        },
+        {
+            title: "準備完了！",
+            content: html`
+                <div class="flex flex-col items-center justify-center h-full text-center space-y-8 animate-fade-in-up">
+                    <div class="text-8xl animate-bounce-slow">🎓</div>
+                    <h2 class="text-3xl font-bold text-gray-800">マスターしましたね！</h2>
+                    <p class="text-lg text-gray-600">
+                        データの見方はわかりましたか？<br/>
+                        次は実際に「ドリルモード」でデータ探偵として事件を解決しましょう！
+                    </p>
+                    <button 
+                        onClick=${onFinish}
+                        class="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transform transition-all"
+                    >
+                        🔎 ドリルモードへ挑戦！
+                    </button>
+                </div>
+            `
+        }
+    ];
+
+    const current = pages[step];
+
+    return html`
+        <div class="flex-1 flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full h-full overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col h-full overflow-hidden">
+                <!-- Tutorial Header -->
+                <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <span class="bg-white text-indigo-600 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm font-black">${step + 1}</span>
+                        ${current.title}
+                    </h2>
+                    <div class="text-sm opacity-80">
+                        ${step + 1} / ${pages.length}
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="flex-1 p-6 md:p-10 overflow-y-auto bg-gray-50/50 relative">
+                    ${current.content}
+                </div>
+
+                <!-- Footer / Controls -->
+                <div class="bg-white border-t border-gray-100 p-4 flex justify-between items-center">
+                    <button 
+                        onClick=${() => setStep(Math.max(0, step - 1))}
+                        disabled=${step === 0}
+                        class="px-6 py-2 rounded-lg font-bold text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                        ← 前へ
+                    </button>
+                    
+                    <div class="flex space-x-2">
+                        ${pages.map((_, i) => html`
+                            <div class="w-2 h-2 rounded-full transition-all ${i === step ? 'bg-indigo-600 w-4' : 'bg-gray-300'}"></div>
+                        `)}
+                    </div>
+
+                    <button 
+                        onClick=${() => setStep(Math.min(pages.length - 1, step + 1))}
+                        disabled=${step === pages.length - 1}
+                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow disabled:opacity-0 disabled:pointer-events-none transition-all"
+                    >
+                        次へ →
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
  * データ入力モーダル
  */
 const DataInputModal = ({ onClose, onImport }) => {
@@ -590,8 +867,8 @@ const DrillClearModal = ({ onRestart }) => html`
 // --- Main App Component ---
 
 const App = () => {
-    // State: Mode - 初期値を 'drill' に変更
-    const [mode, setMode] = useState('drill'); // 'exploration' | 'drill'
+    // State: Mode - 初期値を 'drill' に変更, 'explanation' 追加
+    const [mode, setMode] = useState('drill'); // 'exploration' | 'drill' | 'explanation'
     
     // State: Datasets (Start with presets, allow adding more)
     const [availableDatasets, setAvailableDatasets] = useState(DATASETS);
@@ -822,150 +1099,160 @@ const App = () => {
                     </div>
                 </div>
                 
-                <div class="flex bg-gray-100 p-1 rounded-lg w-full md:w-auto">
+                <div class="flex bg-gray-100 p-1 rounded-lg w-full md:w-auto overflow-x-auto">
                     <button 
-                        class="flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-bold transition-all ${mode === 'drill' ? 'bg-white text-orange-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}"
-                        onClick=${() => { setMode('drill'); setDrillFeedback(null); }}
+                        class="flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${mode === 'explanation' ? 'bg-white text-green-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}"
+                        onClick=${() => { setMode('explanation'); setDrillFeedback(null); }}
                     >
-                        🔎 ドリルモード
+                        📚 解説
                     </button>
                     <button 
-                        class="flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-bold transition-all ${mode === 'exploration' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}"
+                        class="flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${mode === 'drill' ? 'bg-white text-orange-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}"
+                        onClick=${() => { setMode('drill'); setDrillFeedback(null); }}
+                    >
+                        🔎 ドリル
+                    </button>
+                    <button 
+                        class="flex-1 md:flex-none px-4 py-2 rounded-md text-sm font-bold transition-all whitespace-nowrap ${mode === 'exploration' ? 'bg-white text-indigo-600 shadow-md' : 'text-gray-500 hover:text-gray-700'}"
                         onClick=${() => { setMode('exploration'); setDrillFeedback(null); }}
                     >
-                        📊 自由研究モード
+                        📊 自由研究
                     </button>
                 </div>
             </header>
 
             <!-- Main Area -->
-            <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 md:p-6 gap-4 md:gap-6 max-w-[1600px] w-full mx-auto">
-                
-                <!-- Left Column: Controls -->
-                <aside class="w-full lg:w-80 flex-shrink-0 flex flex-col gap-4">
-                    <${Card} title="データ設定" className="flex-none">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">データソース</label>
-                                <select 
-                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white text-gray-900"
-                                    value=${datasetId}
-                                    onChange=${(e) => setDatasetId(e.target.value)}
-                                >
-                                    ${availableDatasets.map(d => html`<option key=${d.id} value=${d.id}>${d.name}</option>`)}
-                                </select>
-                                <p class="mt-2 text-xs text-gray-500 leading-snug">${dataset.description}</p>
-                            </div>
+            ${mode === 'explanation' ? html`
+                <${TutorialMode} onFinish=${() => setMode('drill')} />
+            ` : html`
+                <main class="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-4 md:p-6 gap-4 md:gap-6 max-w-[1600px] w-full mx-auto">
+                    
+                    <!-- Left Column: Controls -->
+                    <aside class="w-full lg:w-80 flex-shrink-0 flex flex-col gap-4">
+                        <${Card} title="データ設定" className="flex-none">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">データソース</label>
+                                    <select 
+                                        class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white text-gray-900"
+                                        value=${datasetId}
+                                        onChange=${(e) => setDatasetId(e.target.value)}
+                                    >
+                                        ${availableDatasets.map(d => html`<option key=${d.id} value=${d.id}>${d.name}</option>`)}
+                                    </select>
+                                    <p class="mt-2 text-xs text-gray-500 leading-snug">${dataset.description}</p>
+                                </div>
 
-                            <!-- "Create Data" is only visible in Exploration Mode -->
-                            ${mode === 'exploration' && html`
+                                <!-- "Create Data" is only visible in Exploration Mode -->
+                                ${mode === 'exploration' && html`
+                                    <button 
+                                        onClick=${() => setShowInputModal(true)}
+                                        class="w-full flex items-center justify-center px-4 py-2 border border-dashed border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md text-sm font-medium transition-colors"
+                                    >
+                                        ＋ 自分でデータを作る
+                                    </button>
+                                `}
+
                                 <button 
-                                    onClick=${() => setShowInputModal(true)}
-                                    class="w-full flex items-center justify-center px-4 py-2 border border-dashed border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md text-sm font-medium transition-colors"
+                                    onClick=${() => setShowDataWindow(!showDataWindow)}
+                                    class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                                 >
-                                    ＋ 自分でデータを作る
+                                    ${showDataWindow ? 'データ一覧を閉じる' : 'データ一覧・選択'}
                                 </button>
-                            `}
+                                <p class="text-xs text-gray-400 text-center">※ グラフ上の点をクリックして一時的に除外可能</p>
+                            </div>
+                        </${Card}>
 
-                            <button 
-                                onClick=${() => setShowDataWindow(!showDataWindow)}
-                                class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                            >
-                                ${showDataWindow ? 'データ一覧を閉じる' : 'データ一覧・選択'}
-                            </button>
-                            <p class="text-xs text-gray-400 text-center">※ グラフ上の点をクリックして一時的に除外可能</p>
-                        </div>
-                    </${Card}>
+                        <${Card} title="変数選択" className="flex-1 lg:h-full min-h-[300px] lg:min-h-0">
+                            <div class="space-y-4">
+                                <div class="p-3 bg-blue-50 rounded-md border border-blue-100 transition-colors hover:bg-blue-100">
+                                    <label class="block text-sm font-bold text-blue-800 mb-1">X軸 (横の軸)</label>
+                                    <select 
+                                        class="block w-full border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border bg-white text-gray-900"
+                                        value=${xKey}
+                                        onChange=${(e) => setXKey(e.target.value)}
+                                    >
+                                        ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
+                                    </select>
+                                    <div class="mt-2 text-xs text-blue-700 flex justify-between px-1">
+                                        <span>最小: ${stats.xStats.min}</span>
+                                        <span>平均: ${stats.xStats.mean.toFixed(1)}</span>
+                                        <span>最大: ${stats.xStats.max}</span>
+                                    </div>
+                                </div>
 
-                    <${Card} title="変数選択" className="flex-1 lg:h-full min-h-[300px] lg:min-h-0">
-                        <div class="space-y-4">
-                            <div class="p-3 bg-blue-50 rounded-md border border-blue-100 transition-colors hover:bg-blue-100">
-                                <label class="block text-sm font-bold text-blue-800 mb-1">X軸 (横の軸)</label>
-                                <select 
-                                    class="block w-full border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border bg-white text-gray-900"
-                                    value=${xKey}
-                                    onChange=${(e) => setXKey(e.target.value)}
-                                >
-                                    ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
-                                </select>
-                                <div class="mt-2 text-xs text-blue-700 flex justify-between px-1">
-                                    <span>最小: ${stats.xStats.min}</span>
-                                    <span>平均: ${stats.xStats.mean.toFixed(1)}</span>
-                                    <span>最大: ${stats.xStats.max}</span>
+                                <div class="flex justify-center items-center">
+                                    <button 
+                                        onClick=${handleSwapAxes}
+                                        class="p-2 rounded-full hover:bg-gray-100 border border-gray-200 text-gray-500 transition-transform active:scale-95 transform hover:rotate-180 duration-300"
+                                        title="軸を入れ替える"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5-6 5 6"/><path d="M17 14l-5 6-5-6"/></svg>
+                                    </button>
+                                </div>
+
+                                <div class="p-3 bg-green-50 rounded-md border border-green-100 transition-colors hover:bg-green-100">
+                                    <label class="block text-sm font-bold text-green-800 mb-1">Y軸 (縦の軸)</label>
+                                    <select 
+                                        class="block w-full border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 sm:text-sm p-2 border bg-white text-gray-900"
+                                        value=${yKey}
+                                        onChange=${(e) => setYKey(e.target.value)}
+                                    >
+                                        ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
+                                    </select>
+                                    <div class="mt-2 text-xs text-green-700 flex justify-between px-1">
+                                        <span>最小: ${stats.yStats.min}</span>
+                                        <span>平均: ${stats.yStats.mean.toFixed(1)}</span>
+                                        <span>最大: ${stats.yStats.max}</span>
+                                    </div>
                                 </div>
                             </div>
+                        </${Card}>
+                    </aside>
 
-                            <div class="flex justify-center items-center">
-                                <button 
-                                    onClick=${handleSwapAxes}
-                                    class="p-2 rounded-full hover:bg-gray-100 border border-gray-200 text-gray-500 transition-transform active:scale-95 transform hover:rotate-180 duration-300"
-                                    title="軸を入れ替える"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5-6 5 6"/><path d="M17 14l-5 6-5-6"/></svg>
-                                </button>
-                            </div>
-
-                            <div class="p-3 bg-green-50 rounded-md border border-green-100 transition-colors hover:bg-green-100">
-                                <label class="block text-sm font-bold text-green-800 mb-1">Y軸 (縦の軸)</label>
-                                <select 
-                                    class="block w-full border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 sm:text-sm p-2 border bg-white text-gray-900"
-                                    value=${yKey}
-                                    onChange=${(e) => setYKey(e.target.value)}
-                                >
-                                    ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
-                                </select>
-                                <div class="mt-2 text-xs text-green-700 flex justify-between px-1">
-                                    <span>最小: ${stats.yStats.min}</span>
-                                    <span>平均: ${stats.yStats.mean.toFixed(1)}</span>
-                                    <span>最大: ${stats.yStats.max}</span>
+                    <!-- Center Column: Visualization -->
+                    <section class="flex-1 flex flex-col min-w-0">
+                        <${Card} className="h-full min-h-[400px] lg:min-h-0">
+                            <div class="h-full flex flex-col">
+                                <div class="flex justify-between items-center mb-4 px-2">
+                                    <h2 class="font-bold text-gray-800 text-lg">散布図: <span class="text-green-600">${yColumn.label}</span> vs <span class="text-blue-600">${xColumn.label}</span></h2>
+                                    <div class="flex items-center gap-4 text-xs md:text-sm">
+                                        <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-indigo-500 rounded-full mr-1 md:mr-2"></span>実測値</div>
+                                        <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-gray-300 rounded-full mr-1 md:mr-2"></span>除外値</div>
+                                        <div class="flex items-center"><span class="w-4 h-1 md:w-8 bg-orange-500 mr-1 md:mr-2"></span>回帰直線</div>
+                                    </div>
+                                </div>
+                                <div class="flex-1 w-full min-h-0 relative" style=${{ minHeight: '300px', height: '100%', width: '100%' }}>
+                                    <${ScatterVis} 
+                                        data=${dataset.data} 
+                                        xConfig=${xColumn} 
+                                        yConfig=${yColumn} 
+                                        regression=${stats.regression}
+                                        excludedIds=${excludedIds}
+                                        onTogglePoint=${togglePoint}
+                                    />
                                 </div>
                             </div>
-                        </div>
-                    </${Card}>
-                </aside>
+                        </${Card}>
+                    </section>
 
-                <!-- Center Column: Visualization -->
-                <section class="flex-1 flex flex-col min-w-0">
-                    <${Card} className="h-full min-h-[400px] lg:min-h-0">
-                        <div class="h-full flex flex-col">
-                            <div class="flex justify-between items-center mb-4 px-2">
-                                <h2 class="font-bold text-gray-800 text-lg">散布図: <span class="text-green-600">${yColumn.label}</span> vs <span class="text-blue-600">${xColumn.label}</span></h2>
-                                <div class="flex items-center gap-4 text-xs md:text-sm">
-                                    <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-indigo-500 rounded-full mr-1 md:mr-2"></span>実測値</div>
-                                    <div class="flex items-center"><span class="w-2 h-2 md:w-3 md:h-3 bg-gray-300 rounded-full mr-1 md:mr-2"></span>除外値</div>
-                                    <div class="flex items-center"><span class="w-4 h-1 md:w-8 bg-orange-500 mr-1 md:mr-2"></span>回帰直線</div>
-                                </div>
-                            </div>
-                            <div class="flex-1 w-full min-h-0 relative" style=${{ minHeight: '300px', height: '100%', width: '100%' }}>
-                                <${ScatterVis} 
-                                    data=${dataset.data} 
-                                    xConfig=${xColumn} 
-                                    yConfig=${yColumn} 
-                                    regression=${stats.regression}
-                                    excludedIds=${excludedIds}
-                                    onTogglePoint=${togglePoint}
-                                />
-                            </div>
-                        </div>
-                    </${Card}>
-                </section>
+                    <!-- Right Column: Analysis -->
+                    <aside class="w-full lg:w-72 flex-shrink-0">
+                        <${Card} title="分析結果" className="h-full">
+                            <${AnalysisPanel} 
+                                xLabel=${xColumn.label}
+                                yLabel=${yColumn.label}
+                                correlation=${stats.correlation}
+                                regression=${stats.regression}
+                                strength=${stats.strength}
+                                activeCount=${stats.activeCount}
+                                totalCount=${dataset.data.length}
+                            />
+                        </${Card}>
+                    </aside>
 
-                <!-- Right Column: Analysis -->
-                <aside class="w-full lg:w-72 flex-shrink-0">
-                    <${Card} title="分析結果" className="h-full">
-                        <${AnalysisPanel} 
-                            xLabel=${xColumn.label}
-                            yLabel=${yColumn.label}
-                            correlation=${stats.correlation}
-                            regression=${stats.regression}
-                            strength=${stats.strength}
-                            activeCount=${stats.activeCount}
-                            totalCount=${dataset.data.length}
-                        />
-                    </${Card}>
-                </aside>
-
-            </main>
+                </main>
+            `}
 
             <!-- Drill Quest Window (Floating Assistant) -->
             ${mode === 'drill' && !showClearModal && html`
@@ -980,7 +1267,7 @@ const App = () => {
             `}
 
             <!-- Floating Window -->
-            ${showDataWindow && html`
+            ${showDataWindow && mode !== 'explanation' && html`
                 <${FloatingDataWindow} 
                     data=${dataset.data} 
                     columns=${dataset.columns} 
