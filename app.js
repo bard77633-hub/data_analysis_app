@@ -11,6 +11,13 @@ import * as MathUtils from './utils/math.js';
 
 const html = htm.bind(React.createElement);
 
+// Extra Mission Configuration
+const EXTRA_MISSION_STAGES = [
+    { datasetId: "extra_cleaning_1", xKey: "study_time", yKey: "score", targetR: 0.95 },
+    { datasetId: "extra_cleaning_2", xKey: "temperature", yKey: "cold_drink_sales", targetR: 0.90 },
+    { datasetId: "extra_cleaning_3", xKey: "level", yKey: "hp", targetR: 0.98 }
+];
+
 // --- Custom Hooks ---
 
 /**
@@ -755,7 +762,7 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
 /**
  * エクストラミッション用のウィンドウ
  */
-const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
+const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targetR, onNext, onComplete }) => {
     // 画面右上（スマホなら画面下部）に配置
     const isMobile = window.innerWidth < 768;
     const initialPos = isMobile ? { x: 16, y: window.innerHeight - 300 } : { x: window.innerWidth - 380, y: 80 };
@@ -764,9 +771,8 @@ const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
     
-    // 目標値
-    const targetR = 0.95;
     const isSuccess = correlation >= targetR;
+    const isFinalStage = stage === totalStages - 1;
 
     return html`
         <div 
@@ -787,7 +793,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
             >
                 <div class="flex items-center space-x-2">
                     <span class="text-xl">🛠️</span>
-                    <span class="font-bold text-sm">EXTRA MISSION</span>
+                    <span class="font-bold text-sm">EXTRA MISSION ${stage + 1}/${totalStages}</span>
                 </div>
                 <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded" onPointerDown=${(e) => e.stopPropagation()}>
                     ${isMinimized ? '□' : '－'}
@@ -799,19 +805,25 @@ const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
                          <div class="text-center space-y-3">
                             <div class="text-5xl animate-bounce-slow">✨</div>
                             <h3 class="text-xl font-bold text-green-600">データ修正完了！</h3>
-                            <p class="text-sm text-gray-700">お見事！ノイズを除去して、本来の美しい相関が見えるようになりました。</p>
                             <div class="p-3 bg-green-50 rounded border border-green-200 text-center font-mono text-xl text-green-800 font-bold">
-                                r = ${correlation.toFixed(3)}
+                                r = ${correlation.toFixed(3)} (目標: ${targetR.toFixed(2)})
                             </div>
-                            <button onClick=${onComplete} class="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded shadow-lg hover:scale-105 transition-transform">
-                                完全制覇！トップへ戻る
-                            </button>
+                            ${isFinalStage ? html`
+                                <p class="text-sm text-gray-700">全ステージクリア！お見事です！</p>
+                                <button onClick=${onComplete} class="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded shadow-lg hover:scale-105 transition-transform">
+                                    完全制覇！トップへ戻る
+                                </button>
+                            ` : html`
+                                <p class="text-sm text-gray-700">お見事！次のデータも修正しよう。</p>
+                                <button onClick=${onNext} class="w-full py-3 bg-blue-600 text-white font-bold rounded shadow-lg hover:bg-blue-700 transition-colors">
+                                    次のステージへ ➡
+                                </button>
+                            `}
                         </div>
                     ` : html`
                         <div>
                             <h3 class="font-bold text-red-700 mb-2">⚠ データ異常発生！</h3>
                             <p class="text-sm text-gray-800 mb-3">
-                                先生が入力ミスをして、おかしなデータ（外れ値）が混入したようです。<br/>
                                 <strong class="text-red-600">グラフの点をクリックして除外</strong>し、正しい相関関係を取り戻してください！
                             </p>
                             
@@ -823,7 +835,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
                                 <div class="w-full bg-gray-200 rounded-full h-4">
                                     <div class="bg-red-500 h-4 rounded-full transition-all duration-500" style=${{ width: `${Math.max(0, correlation * 100)}%` }}></div>
                                 </div>
-                                <div class="text-right text-xs text-gray-500">目標: 0.950 以上</div>
+                                <div class="text-right text-xs text-gray-500">目標: ${targetR.toFixed(3)} 以上</div>
                             </div>
                         </div>
                     `}
@@ -1105,6 +1117,9 @@ const App = () => {
     const [showClearModal, setShowClearModal] = useState(false);
     const [hasCleared, setHasCleared] = useState(false);
 
+    // State: Extra Mission
+    const [extraMissionLevel, setExtraMissionLevel] = useState(0);
+
     // Derived Data
     const dataset = useMemo(() => 
         availableDatasets.find(d => d.id === datasetId) || availableDatasets[0], 
@@ -1283,13 +1298,28 @@ const App = () => {
         setMode('drill');
     };
 
+    // Load Extra Mission Level
+    const loadExtraMissionLevel = (levelIndex) => {
+        const config = EXTRA_MISSION_STAGES[levelIndex];
+        setDatasetId(config.datasetId);
+        setXKey(config.xKey);
+        setYKey(config.yKey);
+        setExcludedIds([]); // Reset selection
+    };
+
     const startExtraMission = () => {
         setShowClearModal(false);
         setMode('extra');
-        setDatasetId("extra_cleaning"); // Set dedicated noise dataset
-        setXKey("study_time");
-        setYKey("score");
-        setExcludedIds([]);
+        setExtraMissionLevel(0);
+        loadExtraMissionLevel(0);
+    };
+
+    const nextExtraMission = () => {
+        if (extraMissionLevel < EXTRA_MISSION_STAGES.length - 1) {
+            const nextLevel = extraMissionLevel + 1;
+            setExtraMissionLevel(nextLevel);
+            loadExtraMissionLevel(nextLevel);
+        }
     };
 
     const finishExtraMission = () => {
@@ -1511,6 +1541,10 @@ const App = () => {
                 <${ExtraMissionWindow}
                     correlation=${stats.correlation}
                     activeCount=${stats.activeCount}
+                    stage=${extraMissionLevel}
+                    totalStages=${EXTRA_MISSION_STAGES.length}
+                    targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR}
+                    onNext=${nextExtraMission}
                     onComplete=${finishExtraMission}
                 />
             `}

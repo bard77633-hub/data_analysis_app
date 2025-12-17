@@ -113,16 +113,17 @@ export const DATASETS = [
             { id: 20, level: 33, hp: 3300, attack: 130, speed: 38, equip_weight: 62, luck: 70 }
         ]
     },
+    // --- Extra Missions (Data Cleaning) ---
     {
-        id: "extra_cleaning",
-        name: "【修正用】入力ミスを含むテストデータ",
-        description: "先生が入力ミスをしてしまったデータ。明らかな外れ値が含まれています。",
+        id: "extra_cleaning_1",
+        name: "【修正用 Lv.1】テスト結果の入力ミス",
+        description: "先生が入力ミスをしてしまったデータ。勉強時間と点数の関係がおかしいデータを見つけよう。",
         columns: [
             { key: "study_time", label: "勉強時間 (分/日)", type: "number", min: 0, max: 300 },
             { key: "score", label: "テスト点数 (点)", type: "number", min: 0, max: 100 }
         ],
         data: [
-            // Base correlation data
+            // Base: Positive correlation
             { id: 1, study_time: 120, score: 85 },
             { id: 2, study_time: 30, score: 45 },
             { id: 3, study_time: 90, score: 78 },
@@ -139,6 +140,66 @@ export const DATASETS = [
             // NOISE DATA (Outliers)
             { id: 99, study_time: 10, score: 95 }, // Low study, High score (lucky?)
             { id: 100, study_time: 250, score: 10 } // High study, Low score (mistake?)
+        ]
+    },
+    {
+        id: "extra_cleaning_2",
+        name: "【修正用 Lv.2】コンビニ発注ミス？",
+        description: "気温と「冷たい飲み物」の売上データ。暑いのに売れてない日がある…？",
+        columns: [
+            { key: "temperature", label: "最高気温 (℃)", type: "number", min: 20, max: 40 },
+            { key: "cold_drink_sales", label: "清涼飲料水売上 (本)", type: "number", min: 0, max: 500 }
+        ],
+        data: [
+             // Base: Positive correlation
+            { id: 1, temperature: 35.0, cold_drink_sales: 450 },
+            { id: 2, temperature: 28.0, cold_drink_sales: 200 },
+            { id: 3, temperature: 33.5, cold_drink_sales: 400 },
+            { id: 4, temperature: 24.0, cold_drink_sales: 120 },
+            { id: 5, temperature: 36.2, cold_drink_sales: 480 },
+            { id: 6, temperature: 31.0, cold_drink_sales: 320 },
+            { id: 7, temperature: 22.5, cold_drink_sales: 100 },
+            { id: 8, temperature: 34.0, cold_drink_sales: 430 },
+            { id: 9, temperature: 30.5, cold_drink_sales: 300 },
+            { id: 10, temperature: 29.0, cold_drink_sales: 250 },
+            { id: 11, temperature: 37.0, cold_drink_sales: 490 },
+            { id: 12, temperature: 23.0, cold_drink_sales: 110 },
+            { id: 13, temperature: 32.5, cold_drink_sales: 380 },
+            { id: 14, temperature: 27.5, cold_drink_sales: 190 },
+            // NOISE DATA
+            { id: 98, temperature: 38.0, cold_drink_sales: 50 }, // Hot but low sales (Out of stock?)
+            { id: 99, temperature: 21.0, cold_drink_sales: 450 } // Cold but high sales (Event?)
+        ]
+    },
+    {
+        id: "extra_cleaning_3",
+        name: "【修正用 Lv.3】ゲームのバグ報告",
+        description: "レベルと「最大HP」のデータ。レベルが高いのにHPが低いキャラがいるみたいだ。",
+        columns: [
+            { key: "level", label: "レベル", type: "number", min: 1, max: 50 },
+            { key: "hp", label: "最大HP", type: "number", min: 100, max: 5000 }
+        ],
+        data: [
+            // Base: Positive correlation
+            { id: 1, level: 10, hp: 500 },
+            { id: 2, level: 45, hp: 4500 },
+            { id: 3, level: 25, hp: 2500 },
+            { id: 4, level: 5, hp: 300 },
+            { id: 5, level: 50, hp: 4800 },
+            { id: 6, level: 30, hp: 3000 },
+            { id: 7, level: 15, hp: 1500 },
+            { id: 8, level: 40, hp: 4000 },
+            { id: 9, level: 20, hp: 2000 },
+            { id: 10, level: 35, hp: 3500 },
+            { id: 11, level: 12, hp: 1200 },
+            { id: 12, level: 48, hp: 4700 },
+            { id: 13, level: 22, hp: 2200 },
+            { id: 14, level: 8, hp: 400 },
+            { id: 15, level: 42, hp: 4200 },
+            // NOISE DATA
+            { id: 97, level: 49, hp: 100 }, // High level low HP (Bug?)
+            { id: 98, level: 1, hp: 5000 }, // Low level high HP (Cheat?)
+            { id: 99, level: 46, hp: 50 }   // Another high level bug
         ]
     }
 ];
@@ -218,14 +279,14 @@ export const DRILL_QUESTS = [
     },
     {
         id: 7,
-        text: "「雨の降水量」と「正の相関」がある売上データを探せ！",
+        text: "「雨の降水量」と「もっとも強い正の相関」がある売上データは？",
         datasetId: "convenience",
         initialX: "rain",
         initialY: "icecream_sales",
         targetKey: "rain",
         validAnswers: ["umbrella_sales"],
         expectedStrength: "正の相関がある",
-        hint: "雨が降れば降るほど、必要になって売れるものは？",
+        hint: "雨が降ると、濡れないためにこれが必要になるよね？（ホットコーヒーも売れるけど、もっと直接関係があるよ）",
         causationNote: "【因果関係あり】雨が降ったことが原因で、傘を必要とする人が増えました。"
     },
     {
