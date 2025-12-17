@@ -215,7 +215,7 @@ const TutorialMode = ({ onFinish }) => {
                         </div>
                         <h4 class="font-bold text-red-700 text-lg mb-2">正の相関</h4>
                         <p class="text-sm text-gray-600">右上がり↗</p>
-                        <p class="text-xs text-gray-500 mt-2">「片方が増えると、もう片方も増える」関係。</p>
+                        <p class="text-xs text-gray-500 mt-2">「片方が増えると、もう片方は増える」関係。</p>
                         <p class="text-xs font-bold text-red-600 mt-1">例：勉強時間と成績</p>
                     </div>
 
@@ -293,6 +293,82 @@ const TutorialMode = ({ onFinish }) => {
                             <span class="font-bold bg-white px-2 py-1 rounded shadow-sm mx-1">0</span>に近いほど、関係がない。
                         </p>
                         <p class="text-sm text-indigo-600 font-bold">ドリルでは、この数字とグラフの形を見比べよう！</p>
+                    </div>
+                </div>
+            `
+        },
+        {
+            title: "ステップ4：だまされないで！「疑似相関（ぎじそうかん）」",
+            content: html`
+                <div class="flex flex-col items-center justify-center min-h-full space-y-8 animate-fade-in-up py-4">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded shadow-sm max-w-3xl w-full">
+                        <h3 class="font-bold text-yellow-800 text-lg mb-2 flex items-center">
+                            <span class="text-2xl mr-2">⚠️</span> 相関がある ≠ 原因と結果
+                        </h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            データ分析で一番気をつけること。それは<br/>
+                            <strong>「AとBに関係があるからといって、Aが原因でBが起きたとは限らない」</strong>ということです。
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-4xl">
+                        <!-- Pseudo Correlation Visual -->
+                        <div class="relative bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex-1 flex flex-col items-center">
+                            <div class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest text-center">よくある間違い</div>
+                            <div class="flex items-center justify-center w-full space-x-4">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🍦</div>
+                                    <div class="font-bold text-sm">アイスの売上</div>
+                                </div>
+                                <div class="flex flex-col items-center text-red-500">
+                                    <span class="text-xs font-bold mb-1">原因？</span>
+                                    <svg class="w-12 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M0 6h20m-4-4l4 4-4 4"/></svg>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🏊</div>
+                                    <div class="font-bold text-sm">水難事故</div>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-xs text-center text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full">
+                                「アイスを食べると事故が増える」…わけないよね？
+                            </p>
+                        </div>
+
+                        <!-- True Causation Visual -->
+                        <div class="relative bg-white p-6 rounded-xl shadow-lg border-2 border-indigo-100 flex-1 flex flex-col items-center">
+                            <div class="text-sm font-bold text-indigo-500 mb-4 uppercase tracking-widest text-center">本当の理由</div>
+                            <div class="relative w-full h-32 flex justify-center">
+                                <!-- Common Cause -->
+                                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 text-center animate-bounce-slow">
+                                    <div class="text-5xl drop-shadow-md">☀️</div>
+                                    <div class="font-bold text-sm bg-white/80 px-2 rounded">気温 (共通の要因)</div>
+                                </div>
+                                
+                                <!-- Arrows -->
+                                <svg class="absolute inset-0 w-full h-full text-indigo-300" overflow="visible">
+                                    <path d="M150 40 L 60 90" fill="none" stroke="currentColor" stroke-width="3" marker-end="url(#arrow-blue)" stroke-dasharray="5"/>
+                                    <path d="M150 40 L 240 90" fill="none" stroke="currentColor" stroke-width="3" marker-end="url(#arrow-blue)" stroke-dasharray="5"/>
+                                    <defs>
+                                        <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                            <path d="M0,0 L0,6 L9,3 z" fill="currentColor" />
+                                        </marker>
+                                    </defs>
+                                </svg>
+
+                                <!-- Effects -->
+                                <div class="absolute bottom-0 left-0 text-center">
+                                    <div class="text-3xl">🍦</div>
+                                    <div class="text-xs font-bold">アイス売上UP</div>
+                                </div>
+                                <div class="absolute bottom-0 right-0 text-center">
+                                    <div class="text-3xl">🏊</div>
+                                    <div class="text-xs font-bold">プール利用UP</div>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-xs text-center text-indigo-700 font-bold bg-indigo-50 px-3 py-1 rounded-full">
+                                「暑い」から両方増えただけ！これを<span class="text-lg">疑似相関</span>というよ
+                            </p>
+                        </div>
                     </div>
                 </div>
             `
@@ -520,7 +596,7 @@ const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose
  * ドリルクエストウィンドウ (ドラッグ可能・最小化可能・タッチ対応)
  * 常に最前面に表示し、問題文と解説を表示
  */
-const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext }) => {
+const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart }) => {
     // 画面右上（スマホなら画面下部）に配置
     const isMobile = window.innerWidth < 768;
     const initialPos = isMobile ? { x: 16, y: window.innerHeight - 250 } : { x: window.innerWidth - 380, y: 80 };
@@ -532,7 +608,47 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext }) =
     // 状態が変化したら自動展開
     useEffect(() => {
         setIsMinimized(false);
-    }, [quest.id, feedback]);
+    }, [quest.id, feedback, hasCleared]);
+
+    // --- Cleared State View ---
+    if (hasCleared) {
+        return html`
+            <div 
+                class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-4 border-yellow-400 ring-4 ring-yellow-100"
+                style=${{ 
+                    top: position.y, 
+                    left: position.x,
+                    width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : '350px'),
+                    touchAction: 'none'
+                }}
+            >
+                 <div 
+                    class="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
+                    onPointerDown=${onPointerDown}
+                    onPointerMove=${onPointerMove}
+                    onPointerUp=${onPointerUp}
+                >
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🏆</span>
+                        <span class="font-bold text-sm">MISSION COMPLETE</span>
+                    </div>
+                    <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded" onPointerDown=${(e) => e.stopPropagation()}>
+                        ${isMinimized ? '□' : '－'}
+                    </button>
+                </div>
+                ${!isMinimized && html`
+                    <div class="p-5 flex flex-col gap-4 text-center">
+                        <div class="text-5xl animate-bounce-slow">🎊</div>
+                        <p class="font-bold text-gray-800">全ミッション達成済み！</p>
+                        <p class="text-sm text-gray-600">君はもうデータ分析マスターだ。<br/>自由研究でさらに探求しよう！</p>
+                        <button onClick=${onRestart} class="w-full py-3 bg-indigo-600 text-white font-bold rounded shadow hover:bg-indigo-700 transition-colors text-sm">
+                            最初からやり直す（リセット）
+                        </button>
+                    </div>
+                `}
+            </div>
+        `;
+    }
 
     const isCorrect = feedback === 'correct';
     
@@ -630,6 +746,87 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext }) =
                     <div class="rounded-lg p-3 ${statusClass} transition-colors duration-300">
                         ${feedbackContent}
                     </div>
+                </div>
+            `}
+        </div>
+    `;
+}
+
+/**
+ * エクストラミッション用のウィンドウ
+ */
+const ExtraMissionWindow = ({ correlation, activeCount, onComplete }) => {
+    // 画面右上（スマホなら画面下部）に配置
+    const isMobile = window.innerWidth < 768;
+    const initialPos = isMobile ? { x: 16, y: window.innerHeight - 300 } : { x: window.innerWidth - 380, y: 80 };
+    
+    // カスタムフックを使用
+    const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
+    const [isMinimized, setIsMinimized] = useState(false);
+    
+    // 目標値
+    const targetR = 0.95;
+    const isSuccess = correlation >= targetR;
+
+    return html`
+        <div 
+            class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-4 transition-all duration-300
+                   ${isSuccess ? 'border-green-400 ring-4 ring-green-100' : 'border-red-500 ring-4 ring-red-100'}"
+            style=${{ 
+                top: position.y, 
+                left: position.x,
+                width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : '350px'),
+                touchAction: 'none'
+            }}
+        >
+             <div 
+                class="px-4 py-2 bg-gradient-to-r from-gray-800 to-black text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
+                onPointerDown=${onPointerDown}
+                onPointerMove=${onPointerMove}
+                onPointerUp=${onPointerUp}
+            >
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🛠️</span>
+                    <span class="font-bold text-sm">EXTRA MISSION</span>
+                </div>
+                <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded" onPointerDown=${(e) => e.stopPropagation()}>
+                    ${isMinimized ? '□' : '－'}
+                </button>
+            </div>
+            ${!isMinimized && html`
+                <div class="p-5 flex flex-col gap-4">
+                    ${isSuccess ? html`
+                         <div class="text-center space-y-3">
+                            <div class="text-5xl animate-bounce-slow">✨</div>
+                            <h3 class="text-xl font-bold text-green-600">データ修正完了！</h3>
+                            <p class="text-sm text-gray-700">お見事！ノイズを除去して、本来の美しい相関が見えるようになりました。</p>
+                            <div class="p-3 bg-green-50 rounded border border-green-200 text-center font-mono text-xl text-green-800 font-bold">
+                                r = ${correlation.toFixed(3)}
+                            </div>
+                            <button onClick=${onComplete} class="w-full py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded shadow-lg hover:scale-105 transition-transform">
+                                完全制覇！トップへ戻る
+                            </button>
+                        </div>
+                    ` : html`
+                        <div>
+                            <h3 class="font-bold text-red-700 mb-2">⚠ データ異常発生！</h3>
+                            <p class="text-sm text-gray-800 mb-3">
+                                先生が入力ミスをして、おかしなデータ（外れ値）が混入したようです。<br/>
+                                <strong class="text-red-600">グラフの点をクリックして除外</strong>し、正しい相関関係を取り戻してください！
+                            </p>
+                            
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm font-bold">
+                                    <span>現在の相関係数:</span>
+                                    <span class="${correlation < 0.5 ? 'text-red-500' : 'text-orange-500'}">${correlation.toFixed(3)}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4">
+                                    <div class="bg-red-500 h-4 rounded-full transition-all duration-500" style=${{ width: `${Math.max(0, correlation * 100)}%` }}></div>
+                                </div>
+                                <div class="text-right text-xs text-gray-500">目標: 0.950 以上</div>
+                            </div>
+                        </div>
+                    `}
                 </div>
             `}
         </div>
@@ -847,7 +1044,7 @@ const AnalysisPanel = ({ xLabel, yLabel, correlation, regression, strength, acti
 /**
  * ドリルクリア時のモーダル
  */
-const DrillClearModal = ({ onRestart }) => html`
+const DrillClearModal = ({ onRestart, onExploration, onExtraMission }) => html`
     <div class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up">
         <div class="bg-white/90 rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden border-4 border-yellow-400 ring-4 ring-yellow-200/50">
             <!-- 背景装飾 -->
@@ -860,14 +1057,22 @@ const DrillClearModal = ({ onRestart }) => html`
                 </h2>
                 <div class="w-24 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mb-6 rounded-full"></div>
                 
-                <p class="text-gray-700 mb-8 font-bold text-lg leading-relaxed">
+                <p class="text-gray-700 mb-6 font-bold text-lg leading-relaxed">
                     全ミッション達成おめでとう！<br/>
                     君はもう立派なデータマスターだ！
                 </p>
                 
-                <button onClick=${onRestart} class="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] transform transition-all text-xl border-t border-white/20">
-                    最初から遊ぶ
-                </button>
+                <div class="space-y-3">
+                    <button onClick=${onExtraMission} class="w-full py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-[1.02] transform transition-all text-xl border-2 border-white/30 animate-pulse">
+                        🛠️ エクストラミッション：データ修正
+                    </button>
+                    <button onClick=${onExploration} class="w-full py-3 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl font-bold hover:bg-indigo-100 transition-colors">
+                        📊 自由研究モードで遊ぶ
+                    </button>
+                    <button onClick=${onRestart} class="w-full py-3 bg-white text-gray-500 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 hover:text-gray-800 transition-colors text-sm">
+                        🔄 最初からやり直す
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -876,8 +1081,8 @@ const DrillClearModal = ({ onRestart }) => html`
 // --- Main App Component ---
 
 const App = () => {
-    // State: Mode - 初期値を 'drill' に変更, 'explanation' 追加
-    const [mode, setMode] = useState('explanation'); // 'exploration' | 'drill' | 'explanation'
+    // State: Mode - 初期値を 'drill' に変更, 'explanation' 追加, 'extra' 追加
+    const [mode, setMode] = useState('explanation'); // 'exploration' | 'drill' | 'explanation' | 'extra'
     
     // State: Datasets (Start with presets, allow adding more)
     const [availableDatasets, setAvailableDatasets] = useState(DATASETS);
@@ -945,7 +1150,7 @@ const App = () => {
 
     // Initialize Drill Quest (Force incorrect selection initially)
     useEffect(() => {
-        if (mode === 'drill') {
+        if (mode === 'drill' && !hasCleared) {
             const quest = DRILL_QUESTS[currentQuestIndex];
             if (quest) {
                 setDatasetId(quest.datasetId);
@@ -954,7 +1159,7 @@ const App = () => {
             }
             setDrillFeedback(null);
         }
-    }, [currentQuestIndex, mode]);
+    }, [currentQuestIndex, mode, hasCleared]);
 
     // Handlers
     const togglePoint = (id) => {
@@ -1072,10 +1277,30 @@ const App = () => {
     
     const restartDrill = () => {
         setShowClearModal(false);
+        setHasCleared(false); // Reset cleared status
         setCurrentQuestIndex(0);
         setDrillFeedback(null);
         setMode('drill');
-        // hasCleared remains true to keep the celebratory background
+    };
+
+    const startExtraMission = () => {
+        setShowClearModal(false);
+        setMode('extra');
+        setDatasetId("extra_cleaning"); // Set dedicated noise dataset
+        setXKey("study_time");
+        setYKey("score");
+        setExcludedIds([]);
+    };
+
+    const finishExtraMission = () => {
+        setMode('explanation'); // Go back to top
+        setDatasetId(DATASETS[0].id);
+        setExcludedIds([]);
+    };
+
+    const goToExploration = () => {
+        setShowClearModal(false);
+        setMode('exploration');
     };
 
     // Safety check to ensure keys are valid when dataset manually changed (Exploration mode mostly)
@@ -1146,6 +1371,7 @@ const App = () => {
                                         class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white text-gray-900"
                                         value=${datasetId}
                                         onChange=${(e) => setDatasetId(e.target.value)}
+                                        disabled=${mode === 'extra'} 
                                     >
                                         ${availableDatasets.map(d => html`<option key=${d.id} value=${d.id}>${d.name}</option>`)}
                                     </select>
@@ -1174,12 +1400,13 @@ const App = () => {
 
                         <${Card} title="変数選択" className="flex-1 lg:h-full min-h-[300px] lg:min-h-0">
                             <div class="space-y-4">
-                                <div class="p-3 bg-blue-50 rounded-md border border-blue-100 transition-colors hover:bg-blue-100">
+                                <div class="p-3 bg-blue-50 rounded-md border border-blue-100 transition-colors hover:bg-blue-100 ${mode === 'extra' ? 'opacity-70 pointer-events-none' : ''}">
                                     <label class="block text-sm font-bold text-blue-800 mb-1">X軸 (横の軸)</label>
                                     <select 
                                         class="block w-full border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border bg-white text-gray-900"
                                         value=${xKey}
                                         onChange=${(e) => setXKey(e.target.value)}
+                                        disabled=${mode === 'extra'}
                                     >
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
@@ -1193,19 +1420,21 @@ const App = () => {
                                 <div class="flex justify-center items-center">
                                     <button 
                                         onClick=${handleSwapAxes}
-                                        class="p-2 rounded-full hover:bg-gray-100 border border-gray-200 text-gray-500 transition-transform active:scale-95 transform hover:rotate-180 duration-300"
+                                        class="p-2 rounded-full hover:bg-gray-100 border border-gray-200 text-gray-500 transition-transform active:scale-95 transform hover:rotate-180 duration-300 ${mode === 'extra' ? 'opacity-50 pointer-events-none' : ''}"
                                         title="軸を入れ替える"
+                                        disabled=${mode === 'extra'}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5-6 5 6"/><path d="M17 14l-5 6-5-6"/></svg>
                                     </button>
                                 </div>
 
-                                <div class="p-3 bg-green-50 rounded-md border border-green-100 transition-colors hover:bg-green-100">
+                                <div class="p-3 bg-green-50 rounded-md border border-green-100 transition-colors hover:bg-green-100 ${mode === 'extra' ? 'opacity-70 pointer-events-none' : ''}">
                                     <label class="block text-sm font-bold text-green-800 mb-1">Y軸 (縦の軸)</label>
                                     <select 
                                         class="block w-full border-green-300 rounded-md focus:ring-green-500 focus:border-green-500 sm:text-sm p-2 border bg-white text-gray-900"
                                         value=${yKey}
                                         onChange=${(e) => setYKey(e.target.value)}
+                                        disabled=${mode === 'extra'}
                                     >
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
@@ -1272,6 +1501,17 @@ const App = () => {
                     feedback=${drillFeedback}
                     onSubmit=${handleDrillSubmit}
                     onNext=${nextQuest}
+                    hasCleared=${hasCleared}
+                    onRestart=${restartDrill}
+                />
+            `}
+
+            <!-- Extra Mission Window -->
+            ${mode === 'extra' && html`
+                <${ExtraMissionWindow}
+                    correlation=${stats.correlation}
+                    activeCount=${stats.activeCount}
+                    onComplete=${finishExtraMission}
                 />
             `}
 
@@ -1295,7 +1535,11 @@ const App = () => {
             `}
 
             ${showClearModal && html`
-                <${DrillClearModal} onRestart=${restartDrill} />
+                <${DrillClearModal} 
+                    onRestart=${restartDrill} 
+                    onExploration=${goToExploration} 
+                    onExtraMission=${startExtraMission}
+                />
             `}
         </div>
     `;

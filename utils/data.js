@@ -112,13 +112,41 @@ export const DATASETS = [
             { id: 19, level: 4, hp: 250, attack: 12, speed: 85, equip_weight: 8, luck: 12 },
             { id: 20, level: 33, hp: 3300, attack: 130, speed: 38, equip_weight: 62, luck: 70 }
         ]
+    },
+    {
+        id: "extra_cleaning",
+        name: "【修正用】入力ミスを含むテストデータ",
+        description: "先生が入力ミスをしてしまったデータ。明らかな外れ値が含まれています。",
+        columns: [
+            { key: "study_time", label: "勉強時間 (分/日)", type: "number", min: 0, max: 300 },
+            { key: "score", label: "テスト点数 (点)", type: "number", min: 0, max: 100 }
+        ],
+        data: [
+            // Base correlation data
+            { id: 1, study_time: 120, score: 85 },
+            { id: 2, study_time: 30, score: 45 },
+            { id: 3, study_time: 90, score: 78 },
+            { id: 4, study_time: 150, score: 92 },
+            { id: 5, study_time: 60, score: 60 },
+            { id: 6, study_time: 10, score: 30 },
+            { id: 7, study_time: 180, score: 98 },
+            { id: 8, study_time: 75, score: 70 },
+            { id: 9, study_time: 45, score: 55 },
+            { id: 10, study_time: 110, score: 82 },
+            { id: 11, study_time: 130, score: 88 },
+            { id: 12, study_time: 20, score: 40 },
+            { id: 13, study_time: 100, score: 75 },
+            // NOISE DATA (Outliers)
+            { id: 99, study_time: 10, score: 95 }, // Low study, High score (lucky?)
+            { id: 100, study_time: 250, score: 10 } // High study, Low score (mistake?)
+        ]
     }
 ];
 
 export const DRILL_QUESTS = [
     {
         id: 1,
-        text: "「勉強時間」と「かなり強い正の相関がある」項目を探そう。",
+        text: "「勉強時間」と「もっとも強い正の相関がある」項目を探そう。",
         datasetId: "students",
         initialX: "study_time",
         initialY: "height",
@@ -130,19 +158,19 @@ export const DRILL_QUESTS = [
     },
     {
         id: 2,
-        text: "「スマホ使用時間」と「かなり強い負の相関がある」項目を探そう。",
+        text: "「スマホ使用時間」と「もっとも強い負の相関がある」項目を探そう。",
         datasetId: "students",
         initialX: "smartphone_time",
         initialY: "height",
         targetKey: "smartphone_time",
         validAnswers: ["score"], 
         expectedStrength: "かなり強い負の相関がある",
-        hint: "スマホ時間が増えすぎると下がる数値は？（睡眠時間にも影響するかも？）",
-        causationNote: "【考察】スマホの長時間利用は、睡眠時間を減らし、結果として成績を下げる原因になっている可能性があります。（※睡眠時間とも負の相関がありますが、今回は最も強い相関がある成績が正解です）"
+        hint: "いくつか負の相関（右下がり）がある項目があるけど、グラフの点が一番キレイに直線に並ぶのはどれかな？",
+        causationNote: "【考察】スマホの長時間利用は、睡眠時間を減らし、結果として成績を下げる原因になっている可能性があります。（※睡眠時間や勉強時間とも負の相関がありますが、今回は最も強い相関がある「成績」が正解です）"
     },
     {
         id: 3,
-        text: "RPGデータ：「装備重量」と「負の相関（または強い負の相関）」がある項目は？",
+        text: "RPGデータ：「装備重量」と「もっとも強い負の相関」がある項目は？",
         datasetId: "rpg_game",
         initialX: "equip_weight",
         initialY: "hp",
@@ -154,7 +182,7 @@ export const DRILL_QUESTS = [
     },
     {
         id: 4,
-        text: "「最高気温」と「かなり強い正の相関がある」飲み物はどっち？",
+        text: "「最高気温」と「もっとも強い正の相関がある」飲み物はどっち？",
         datasetId: "convenience",
         initialX: "temperature",
         initialY: "customers",
@@ -178,7 +206,7 @@ export const DRILL_QUESTS = [
     },
     {
         id: 6,
-        text: "RPGデータ：「レベル」と「かなり強い正の相関」があるステータスは？",
+        text: "RPGデータ：「レベル」と「もっとも強い正の相関」があるステータスは？",
         datasetId: "rpg_game",
         initialX: "level",
         initialY: "luck",
