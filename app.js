@@ -11,11 +11,35 @@ import * as MathUtils from './utils/math.js';
 
 const html = htm.bind(React.createElement);
 
-// Extra Mission Configuration
+// Extra Mission Configuration with Stories
 const EXTRA_MISSION_STAGES = [
-    { datasetId: "extra_cleaning_1", xKey: "study_time", yKey: "score", targetR: 0.95 },
-    { datasetId: "extra_cleaning_2", xKey: "temperature", yKey: "cold_drink_sales", targetR: 0.90 },
-    { datasetId: "extra_cleaning_3", xKey: "level", yKey: "hp", targetR: 0.98 }
+    { 
+        datasetId: "extra_cleaning_1", 
+        xKey: "study_time", 
+        yKey: "score", 
+        targetR: 0.95,
+        title: "居眠り先生の入力ミス",
+        intro: "「やってしまった…」徹夜明けの先生が、テスト結果の入力中に居眠りをしてしまったようです。「勉強時間がすごいのに点数が低すぎる」などの、ありえないデータを探して修正してください！",
+        explanation: "【解説】入力ミス（外れ値）は、データ全体の分析結果を大きく歪めてしまいます。たった1つのミスデータを取り除くだけで、相関係数が劇的に改善し、正しい傾向が見えるようになったはずです。"
+    },
+    { 
+        datasetId: "extra_cleaning_2", 
+        xKey: "temperature", 
+        yKey: "cold_drink_sales", 
+        targetR: 0.90,
+        title: "新米バイトの発注ミス？",
+        intro: "「暑い日なのに全然売れてない日があるんです！」新人のバイト君が在庫管理を間違えて、売り切れを起こしていた疑惑があります。気温が高いのに売上が極端に低い日を除外して、本来の需要を確かめてください。",
+        explanation: "【解説】これは「機会損失」のデータです。売り切れなどで記録されなかった異常値を含めたままだと、「暑くても売れない」という誤った分析をしてしまう恐れがあります。"
+    },
+    { 
+        datasetId: "extra_cleaning_3", 
+        xKey: "level", 
+        yKey: "hp", 
+        targetR: 0.98,
+        title: "伝説のバグキャラクター",
+        intro: "「レベル50なのにHPが初期値のままのキャラがいるぞ！」ゲームの掲示板でバグ報告が相次いでいます。レベルに見合わない異常なステータスを持つバグキャラクターを特定し、BAN（除外）してください！",
+        explanation: "【解説】システムのエラーやバグによるデータは、ゲームバランスの分析を邪魔します。散布図を使えば、数値のルールから外れた異常なデータを一瞬で見つけ出すことができます。"
+    }
 ];
 
 // --- Custom Hooks ---
@@ -71,6 +95,25 @@ const TutorialMode = ({ onFinish }) => {
     const [step, setStep] = useState(0);
     const demoData = [{ id: 1, temp: 25, sales: 150 }, { id: 2, temp: 30, sales: 280 }, { id: 3, temp: 35, sales: 400 }];
     const [plotStep, setPlotStep] = useState(0);
+
+    // SVG Diagrams for reuse
+    const PositiveCorrelationSVG = html`
+        <svg viewBox="0 0 100 80" class="w-full h-full overflow-visible">
+            <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+            <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+            <path d="M15 65 L 85 15" stroke="#ef4444" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
+            ${[{x:20,y:62},{x:35,y:52},{x:45,y:40},{x:58,y:35},{x:70,y:25},{x:82,y:18}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#ef4444" />`)}
+        </svg>
+    `;
+
+    const NegativeCorrelationSVG = html`
+        <svg viewBox="0 0 100 80" class="w-full h-full overflow-visible">
+            <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+            <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+            <path d="M15 15 L 85 65" stroke="#10b981" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
+            ${[{x:20,y:18},{x:35,y:25},{x:45,y:40},{x:58,y:45},{x:70,y:55},{x:82,y:62}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#10b981" />`)}
+        </svg>
+    `;
 
     const pages = [
         {
@@ -153,12 +196,7 @@ const TutorialMode = ({ onFinish }) => {
                     <!-- Positive -->
                     <div class="bg-red-50 p-6 rounded-2xl border border-red-100 flex flex-col items-center text-center shadow-sm">
                         <div class="h-32 w-full flex items-center justify-center mb-4">
-                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
-                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
-                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
-                                <path d="M15 65 L 85 15" stroke="#ef4444" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
-                                ${[{x:20,y:62},{x:35,y:52},{x:45,y:40},{x:58,y:35},{x:70,y:25},{x:82,y:18}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#ef4444" />`)}
-                            </svg>
+                            ${PositiveCorrelationSVG}
                         </div>
                         <h4 class="font-black text-2xl text-red-700 mb-2">正の相関</h4>
                         <p class="text-sm text-gray-700 font-bold mb-4">「右上がり」の並び</p>
@@ -170,12 +208,7 @@ const TutorialMode = ({ onFinish }) => {
                     <!-- Negative -->
                     <div class="bg-green-50 p-6 rounded-2xl border border-green-100 flex flex-col items-center text-center shadow-sm">
                         <div class="h-32 w-full flex items-center justify-center mb-4">
-                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
-                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
-                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
-                                <path d="M15 15 L 85 65" stroke="#10b981" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
-                                ${[{x:20,y:18},{x:35,y:25},{x:45,y:40},{x:58,y:45},{x:70,y:55},{x:82,y:62}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#10b981" />`)}
-                            </svg>
+                            ${NegativeCorrelationSVG}
                         </div>
                         <h4 class="font-black text-2xl text-green-700 mb-2">負の相関</h4>
                         <p class="text-sm text-gray-700 font-bold mb-4">「右下がり」の並び</p>
@@ -227,13 +260,19 @@ const TutorialMode = ({ onFinish }) => {
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                        <div class="p-4 bg-white border rounded-xl shadow-sm">
-                            <h4 class="font-bold text-red-600 mb-2">1.0 に近いとき</h4>
-                            <p class="text-sm text-gray-600">点が「きれいな右上がりの直線」に近づくほど、1.0に近づきます。</p>
+                        <div class="p-4 bg-white border rounded-xl shadow-sm flex items-center gap-4">
+                            <div class="w-24 shrink-0 opacity-80">${PositiveCorrelationSVG}</div>
+                            <div>
+                                <h4 class="font-bold text-red-600 mb-1">1.0 に近いとき</h4>
+                                <p class="text-sm text-gray-600">「正の相関」が強くなり、きれいな右上がりの直線に近づきます。</p>
+                            </div>
                         </div>
-                        <div class="p-4 bg-white border rounded-xl shadow-sm">
-                            <h4 class="font-bold text-green-600 mb-2"> -1.0 に近いとき</h4>
-                            <p class="text-sm text-gray-600">点が「きれいな右下がりの直線」に近づくほど、-1.0に近づきます。</p>
+                        <div class="p-4 bg-white border rounded-xl shadow-sm flex items-center gap-4">
+                             <div class="w-24 shrink-0 opacity-80">${NegativeCorrelationSVG}</div>
+                            <div>
+                                <h4 class="font-bold text-green-600 mb-1"> -1.0 に近いとき</h4>
+                                <p class="text-sm text-gray-600">「負の相関」が強くなり、きれいな右下がりの直線に近づきます。</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -366,7 +405,13 @@ const TutorialMode = ({ onFinish }) => {
  */
 const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart }) => {
     const isMobile = window.innerWidth < 768;
-    const initialPos = isMobile ? { x: 16, y: window.innerHeight - 250 } : { x: window.innerWidth - 380, y: 80 };
+    // PCの場合は画面中央、モバイルの場合は下部
+    const width = 350;
+    const height = 400; // approximate
+    const initialPos = isMobile 
+        ? { x: 16, y: window.innerHeight - 250 } 
+        : { x: (window.innerWidth / 2) - (width / 2), y: (window.innerHeight / 2) - 150 };
+
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
     
@@ -388,7 +433,6 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
             <div class="space-y-3">
                 <div class="font-bold text-green-700 text-lg">正解です！</div>
                 <div class="bg-white p-3 rounded border border-green-200 text-sm text-gray-700 leading-relaxed shadow-sm">
-                    <div class="font-bold text-green-800 mb-1 flex items-center"><span class="mr-1">💡</span>探偵メモ</div>
                     ${quest.causationNote}
                 </div>
                 <button onClick=${onNext} class="w-full py-3 bg-green-500 text-white font-bold rounded shadow hover:bg-green-600 transition-transform active:scale-95 flex justify-center items-center">
@@ -427,7 +471,7 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
     return html`
         <div class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-2 transition-all duration-300
                    ${isCorrect ? 'border-green-400 ring-4 ring-green-100' : 'border-indigo-100'}"
-            style=${{ top: position.y, left: position.x, width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : '350px'), maxHeight: '80vh', touchAction: 'none' }}>
+            style=${{ top: position.y, left: position.x, width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : `${width}px`), maxHeight: '80vh', touchAction: 'none' }}>
             <div class="px-4 py-2 bg-gray-900 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
                 onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
                 <div class="flex items-center space-x-2">
@@ -461,6 +505,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
     
     const isSuccess = correlation >= targetR;
     const isFinalStage = stage === totalStages - 1;
+    const missionInfo = EXTRA_MISSION_STAGES[stage];
 
     return html`
         <div class="fixed z-[90] bg-white shadow-2xl rounded-xl overflow-hidden border-2 transition-all duration-300
@@ -478,14 +523,23 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
             </div>
             ${!isMinimized && html`
                 <div class="p-5 flex flex-col gap-4">
+                    ${!isSuccess && html`
+                        <div class="border-b pb-2 mb-1">
+                            <h4 class="font-black text-gray-800 text-lg mb-1">${missionInfo.title}</h4>
+                            <p class="text-sm text-gray-600 leading-relaxed">${missionInfo.intro}</p>
+                        </div>
+                    `}
+
                     ${isSuccess ? html`
                          <div class="text-center space-y-3">
                             <div class="text-5xl animate-bounce-slow">✨</div>
                             <h3 class="text-xl font-bold text-green-600">修正完了！</h3>
-                            <div class="p-3 bg-green-50 rounded-xl border border-green-200 text-center font-mono text-2xl text-green-800 font-black">
+                            <div class="bg-green-50 p-3 rounded-lg text-left">
+                                <p class="text-sm text-green-900 leading-relaxed font-medium">${missionInfo.explanation}</p>
+                            </div>
+                            <div class="p-3 rounded-xl border border-green-200 text-center font-mono text-xl text-green-800 font-black">
                                 r = ${correlation.toFixed(3)}
                             </div>
-                            <p class="text-xs text-gray-500 font-bold">目標の ${targetR.toFixed(2)} をクリアしました</p>
                             ${isFinalStage ? html`
                                 <button onClick=${onComplete} class="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-all text-lg">
                                     探偵マスター！トップへ 🎓
@@ -498,9 +552,9 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
                         </div>
                     ` : html`
                         <div class="space-y-3">
-                            <h3 class="font-bold text-red-700 text-lg border-b border-red-50 pb-1">⚠ データ異常発生！</h3>
+                            <h3 class="font-bold text-red-700 text-sm border-b border-red-50 pb-1">指令：異常データを除外せよ</h3>
                             <p class="text-sm text-gray-800 font-bold">
-                                傾向から外れた<strong class="text-red-600">「点」をクリックして除外</strong>し、正しい相関を取り戻せ！
+                                散布図上で明らかに傾向から外れている<strong class="text-red-600">「点」をクリックして除外</strong>し、正しい相関係数を取り戻してください。
                             </p>
                             <div class="space-y-2 bg-gray-50 p-3 rounded-lg">
                                 <div class="flex justify-between font-bold text-xs">

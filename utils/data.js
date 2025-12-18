@@ -113,7 +113,7 @@ export const DATASETS = [
     {
         id: "extra_cleaning_1",
         name: "【修正用 Lv.1】テスト結果の入力ミス",
-        description: "先生が入力ミスをしてしまったデータ。勉強時間と点数の関係がおかしいデータを見つけよう。",
+        description: "入力ミスが含まれているデータセット。",
         columns: [
             { key: "study_time", label: "勉強時間 (分/日)", type: "number", min: 0, max: 300 },
             { key: "score", label: "テスト点数 (点)", type: "number", min: 0, max: 100 }
@@ -139,7 +139,7 @@ export const DATASETS = [
     {
         id: "extra_cleaning_2",
         name: "【修正用 Lv.2】コンビニ発注ミス？",
-        description: "気温と「冷たい飲み物」の売上データ。暑いのに売れてない日がある…？",
+        description: "入力ミスが含まれているデータセット。",
         columns: [
             { key: "temperature", label: "最高気温 (℃)", type: "number", min: 20, max: 40 },
             { key: "cold_drink_sales", label: "清涼飲料水売上 (本)", type: "number", min: 0, max: 500 }
@@ -166,7 +166,7 @@ export const DATASETS = [
     {
         id: "extra_cleaning_3",
         name: "【修正用 Lv.3】ゲームのバグ報告",
-        description: "レベルと「最大HP」のデータ。レベルが高いのにHPが低いキャラがいるみたいだ。",
+        description: "入力ミスが含まれているデータセット。",
         columns: [
             { key: "level", label: "レベル", type: "number", min: 1, max: 50 },
             { key: "hp", label: "最大HP", type: "number", min: 100, max: 5000 }
@@ -197,98 +197,98 @@ export const DATASETS = [
 export const DRILL_QUESTS = [
     {
         id: 1,
-        text: "「勉強時間」と「もっとも強い正の相関がある」項目を探そう。",
+        text: "【調査依頼：校長先生】「勉強すればするほど、本当に成績は上がるのか証明してほしい！」とのことです。",
         datasetId: "students",
         initialX: "study_time",
         initialY: "height",
         targetKey: "study_time",
         validAnswers: ["score"], 
         expectedStrength: "かなり強い正の相関がある",
-        hint: "勉強を頑張れば頑張るほど、明確に上がる数値は？",
-        causationNote: "【因果関係あり】勉強時間が増えたことが原因で、成績が上がったと考えられます。"
+        hint: "勉強時間を横軸にしたとき、右肩上がり（正の相関）になる項目はどれかな？",
+        causationNote: "【分析結果】「勉強時間」と「成績」には強い正の相関が見られました。例外もありますが、基本的には学習量に比例して成果が出る傾向にあると言えます。校長先生もこれで安心するでしょう！"
     },
     {
         id: 2,
-        text: "「スマホ使用時間」と「もっとも強い負の相関がある」項目を探そう。",
+        text: "【調査依頼：生活指導の先生】「スマホの使いすぎで成績が下がっている生徒がいる気がする…。データで確認してくれ」",
         datasetId: "students",
         initialX: "smartphone_time",
         initialY: "height",
         targetKey: "smartphone_time",
         validAnswers: ["score"], 
         expectedStrength: "かなり強い負の相関がある",
-        hint: "いくつか負の相関（右下がり）がある項目があるけど、グラフの点が一番キレイに直線に並ぶのはどれかな？",
-        causationNote: "【考察】スマホの長時間利用は、睡眠時間を減らし、結果として成績を下げる原因になっている可能性があります。"
+        hint: "スマホ時間を横軸にしたとき、右肩下がり（負の相関）になる項目を探してみよう。",
+        causationNote: "【分析結果】「スマホ時間」と「成績」には負の相関が見つかりました。スマホの長時間利用が睡眠や学習時間を圧迫し、成績低下の一因となっている可能性が高いです。"
     },
     {
         id: 3,
-        text: "RPGデータ：「装備重量」と「もっとも強い負の相関」がある項目は？",
+        text: "【調査依頼：ゲーム開発部】「重装備のキャラの動きが遅い気がする。装備の重さが影響しているか調べて！」",
         datasetId: "rpg_game",
         initialX: "equip_weight",
         initialY: "hp",
         targetKey: "equip_weight",
         validAnswers: ["speed"],
         expectedStrength: "負の相関がある", 
-        hint: "重たい鎧を着ると、キャラクターの動きはどうなるかな？",
-        causationNote: "【因果関係あり】装備が重いことが原因で、動くスピードが遅くなっています。"
+        hint: "重たい鎧を着込むほど、数値が下がってしまうステータスはどれ？",
+        causationNote: "【分析結果】「装備重量」と「素早さ」に負の相関を確認しました。重い装備は防御力を上げる一方で、スピードを犠牲にするトレードオフの関係にあることがデータから読み取れます。"
     },
     {
         id: 4,
-        text: "「最高気温」と「もっとも強い正の相関がある」飲み物はどっち？",
+        text: "【調査依頼：コンビニ店長】「夏本番！ 暑くなると飛ぶように売れる飲み物があるらしい。来客数との関係から突き止めて！」",
         datasetId: "convenience",
         initialX: "temperature",
         initialY: "customers",
         targetKey: "temperature",
         validAnswers: ["cold_drink_sales"], 
         expectedStrength: "かなり強い正の相関がある",
-        hint: "暑い日に飲みたくなるのは、ホットコーヒー？それとも清涼飲料水？",
-        causationNote: "【因果関係あり】気温が高いことが原因で、冷たい飲み物が売れています。"
+        hint: "気温が上がると、みんなが飲みたくなる冷たいものは何だろう？",
+        causationNote: "【分析結果】「気温」と「清涼飲料水」に強い正の相関があります。暑い日ほど脱水予防やリフレッシュのために購入者が増えるため、発注量を増やす必要があります。"
     },
     {
         id: 5,
-        text: "★難問★ 「アイス売上」と「かなり強い正の相関」がある別の商品は？",
+        text: "【調査依頼：新人アルバイト】「アイスが売れる日は、他の飲み物も売れてる気がします！ これってアイスのおかげですか！？」",
         datasetId: "convenience",
         initialX: "icecream_sales",
         initialY: "customers",
         targetKey: "icecream_sales",
         validAnswers: ["cold_drink_sales"], 
         expectedStrength: "かなり強い正の相関がある",
-        hint: "アイスが売れる暑い日は、他の冷たいものも売れているはず！",
-        causationNote: "【重要：因果関係なし！】これを「擬似相関」と呼びます。"
+        hint: "相関は強いけど、これは「疑似相関」の可能性が高いよ。アイスとよく似た売れ方をする飲み物は？",
+        causationNote: "【分析結果】正解！ただし注意が必要です。これは「アイスを買うから飲み物を買う」のではなく、「暑いからどちらも売れる」という【疑似相関】です。原因を見誤らないようにしましょう！"
     },
     {
         id: 6,
-        text: "RPGデータ：「レベル」と「もっとも強い正の相関」があるステータスは？",
+        text: "【調査依頼：プレイヤー】「レベル上げ頑張ったのにステータスが上がってない気がする…。レベルと一番関係あるステータスって何？」",
         datasetId: "rpg_game",
         initialX: "level",
         initialY: "luck",
         targetKey: "level",
         validAnswers: ["hp", "attack"], 
         expectedStrength: "かなり強い正の相関がある",
-        hint: "レベルが上がると、キャラクターは全体的に強くなるよ！",
-        causationNote: "【正解】レベルアップによって、HPも攻撃力も上昇するように設定されています。"
+        hint: "レベルアップで確実に成長するように設定されている、基本ステータス（体力や力）を見てみよう。",
+        causationNote: "【分析結果】「レベル」は「HP」や「攻撃力」と強い正の相関があります。このゲームでは、レベルを上げれば基礎能力は確実に向上するように設計されていることが証明されました。"
     },
     {
         id: 7,
-        text: "「雨の降水量」と「もっとも強い正の相関」がある売上データは？",
+        text: "【調査依頼：エリアマネージャー】「雨の日に特有の売上傾向があるか知りたい。雨量と連動して売れる商品はあるか？」",
         datasetId: "convenience",
         initialX: "rain",
         initialY: "icecream_sales",
         targetKey: "rain",
         validAnswers: ["umbrella_sales"],
         expectedStrength: "正の相関がある",
-        hint: "雨が降ると、濡れないためにこれが必要になるよね？（ホットコーヒーも売れるけど、もっと直接関係があるよ）",
-        causationNote: "【因果関係あり】雨が降ったことが原因で、傘を必要とする人が増えました。"
+        hint: "雨が降れば降るほど、必要に迫られて売れるものといえば？",
+        causationNote: "【分析結果】「降水量」と「傘の売上」に正の相関があります。雨が強くなるほど、傘を持っていない人が緊急で購入するケースが増えるという、わかりやすい因果関係です。"
     },
     {
         id: 8,
-        text: "「テスト点数」と「ほとんど相関がない（関係がない）」項目はどれ？",
+        text: "【調査依頼：統計の先生】「最後は難問だ。『全く関係がない』ことを証明するのも重要だ。テストの点数と関係ない項目を見つけてくれ」",
         datasetId: "students",
         initialX: "score",
         initialY: "study_time",
         targetKey: "score",
         validAnswers: ["height", "commute_time"],
         expectedStrength: "ほとんど相関がない",
-        hint: "背の高さや通学時間で、テストの点数は決まるかな？",
-        causationNote: "【相関なし】これを「無相関」と呼びます。"
+        hint: "背の高さや、家から学校までの距離で、テストの点数は決まるかな？",
+        causationNote: "【分析結果】正解です！「身長」や「通学時間」は、グラフ全体に点がバラバラに散らばっており、相関が見られません。これを【無相関】と呼び、「関係がないこと」の証明になります。"
     }
 ];
