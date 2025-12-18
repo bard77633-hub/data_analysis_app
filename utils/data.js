@@ -109,7 +109,7 @@ export const DATASETS = [
             { id: 20, level: 33, hp: 3300, attack: 130, speed: 38, equip_weight: 62, luck: 70 }
         ]
     },
-    // --- Extra Missions (Data Cleaning) ---
+    // --- Extra Missions (Data Cleaning & Searching) ---
     {
         id: "extra_cleaning_1",
         name: "【修正用 Lv.1】テスト結果の入力ミス",
@@ -137,59 +137,53 @@ export const DATASETS = [
         ]
     },
     {
-        id: "extra_cleaning_2",
-        name: "【修正用 Lv.2】コンビニ発注ミス？",
-        description: "入力ミスが含まれているデータセット。",
+        id: "extra_selection_1",
+        name: "【探索用 Lv.1】天才肌の生徒",
+        description: "生徒の特性データ。",
         columns: [
-            { key: "temperature", label: "最高気温 (℃)", type: "number", min: 20, max: 40 },
-            { key: "cold_drink_sales", label: "清涼飲料水売上 (本)", type: "number", min: 0, max: 500 }
+            { key: "study_time", label: "勉強時間 (分/日)", type: "number", min: 0, max: 300 },
+            { key: "score", label: "テスト点数 (点)", type: "number", min: 0, max: 100 }
         ],
         data: [
-            { id: 1, temperature: 35.0, cold_drink_sales: 450 },
-            { id: 2, temperature: 28.0, cold_drink_sales: 200 },
-            { id: 3, temperature: 33.5, cold_drink_sales: 400 },
-            { id: 4, temperature: 24.0, cold_drink_sales: 120 },
-            { id: 5, temperature: 36.2, cold_drink_sales: 480 },
-            { id: 6, temperature: 31.0, cold_drink_sales: 320 },
-            { id: 7, temperature: 22.5, cold_drink_sales: 100 },
-            { id: 8, temperature: 34.0, cold_drink_sales: 430 },
-            { id: 9, temperature: 30.5, cold_drink_sales: 300 },
-            { id: 10, temperature: 29.0, cold_drink_sales: 250 },
-            { id: 11, temperature: 37.0, cold_drink_sales: 490 },
-            { id: 12, temperature: 23.0, cold_drink_sales: 110 },
-            { id: 13, temperature: 32.5, cold_drink_sales: 380 },
-            { id: 14, temperature: 27.5, cold_drink_sales: 190 },
-            { id: 98, temperature: 38.0, cold_drink_sales: 50 },
-            { id: 99, temperature: 21.0, cold_drink_sales: 450 }
+            { id: 1, study_time: 120, score: 85 },
+            { id: 2, study_time: 130, score: 88 },
+            { id: 3, study_time: 140, score: 90 },
+            { id: 4, study_time: 150, score: 92 },
+            { id: 5, study_time: 180, score: 98 },
+            { id: 6, study_time: 30, score: 45 },
+            { id: 7, study_time: 40, score: 50 },
+            { id: 8, study_time: 45, score: 55 },
+            { id: 9, study_time: 20, score: 40 },
+            { id: 10, study_time: 10, score: 30 },
+            // Targets: Low Study, High Score
+            { id: 21, study_time: 20, score: 90 },
+            { id: 22, study_time: 30, score: 95 },
+            { id: 23, study_time: 15, score: 85 }
         ]
     },
     {
-        id: "extra_cleaning_3",
-        name: "【修正用 Lv.3】ゲームのバグ報告",
-        description: "入力ミスが含まれているデータセット。",
+        id: "extra_selection_2",
+        name: "【探索用 Lv.2】軽量アタッカー",
+        description: "装備と攻撃力のデータ。",
         columns: [
-            { key: "level", label: "レベル", type: "number", min: 1, max: 50 },
-            { key: "hp", label: "最大HP", type: "number", min: 100, max: 5000 }
+            { key: "equip_weight", label: "装備重量", type: "number", min: 0, max: 100 },
+            { key: "attack", label: "攻撃力", type: "number", min: 10, max: 200 }
         ],
         data: [
-            { id: 1, level: 10, hp: 500 },
-            { id: 2, level: 45, hp: 4500 },
-            { id: 3, level: 25, hp: 2500 },
-            { id: 4, level: 5, hp: 300 },
-            { id: 5, level: 50, hp: 4800 },
-            { id: 6, level: 30, hp: 3000 },
-            { id: 7, level: 15, hp: 1500 },
-            { id: 8, level: 40, hp: 4000 },
-            { id: 9, level: 20, hp: 2000 },
-            { id: 10, level: 35, hp: 3500 },
-            { id: 11, level: 12, hp: 1200 },
-            { id: 12, level: 48, hp: 4700 },
-            { id: 13, level: 22, hp: 2200 },
-            { id: 14, level: 8, hp: 400 },
-            { id: 15, level: 42, hp: 4200 },
-            { id: 97, level: 49, hp: 100 },
-            { id: 98, level: 1, hp: 5000 },
-            { id: 99, level: 46, hp: 50 }
+            { id: 1, equip_weight: 80, attack: 150 },
+            { id: 2, equip_weight: 90, attack: 180 },
+            { id: 3, equip_weight: 70, attack: 140 },
+            { id: 4, equip_weight: 85, attack: 170 },
+            { id: 5, equip_weight: 95, attack: 190 },
+            { id: 6, equip_weight: 20, attack: 30 },
+            { id: 7, equip_weight: 15, attack: 25 },
+            { id: 8, equip_weight: 30, attack: 40 },
+            { id: 9, equip_weight: 25, attack: 35 },
+            { id: 10, equip_weight: 10, attack: 20 },
+            // Targets: Low Weight, High Attack
+            { id: 31, equip_weight: 15, attack: 160 },
+            { id: 32, equip_weight: 20, attack: 170 },
+            { id: 33, equip_weight: 10, attack: 150 }
         ]
     }
 ];
@@ -203,6 +197,7 @@ export const DRILL_QUESTS = [
         initialY: "height",
         targetKey: "study_time",
         validAnswers: ["score"], 
+        explicitObjective: "「勉強時間」と「強い正の相関」がある項目を探してください。",
         expectedStrength: "かなり強い正の相関がある",
         hint: "勉強時間を横軸にしたとき、右肩上がり（正の相関）になる項目はどれかな？",
         causationNote: "【分析結果】「勉強時間」と「成績」には強い正の相関が見られました。例外もありますが、基本的には学習量に比例して成果が出る傾向にあると言えます。校長先生もこれで安心するでしょう！"
@@ -214,7 +209,8 @@ export const DRILL_QUESTS = [
         initialX: "smartphone_time",
         initialY: "height",
         targetKey: "smartphone_time",
-        validAnswers: ["score"], 
+        validAnswers: ["score"],
+        explicitObjective: "「スマホ使用時間」と「負の相関」がある項目を探してください。",
         expectedStrength: "かなり強い負の相関がある",
         hint: "スマホ時間を横軸にしたとき、右肩下がり（負の相関）になる項目を探してみよう。",
         causationNote: "【分析結果】「スマホ時間」と「成績」には負の相関が見つかりました。スマホの長時間利用が睡眠や学習時間を圧迫し、成績低下の一因となっている可能性が高いです。"
@@ -227,6 +223,7 @@ export const DRILL_QUESTS = [
         initialY: "hp",
         targetKey: "equip_weight",
         validAnswers: ["speed"],
+        explicitObjective: "「装備重量」と「負の相関」がある項目を探してください。",
         expectedStrength: "負の相関がある", 
         hint: "重たい鎧を着込むほど、数値が下がってしまうステータスはどれ？",
         causationNote: "【分析結果】「装備重量」と「素早さ」に負の相関を確認しました。重い装備は防御力を上げる一方で、スピードを犠牲にするトレードオフの関係にあることがデータから読み取れます。"
@@ -239,6 +236,7 @@ export const DRILL_QUESTS = [
         initialY: "customers",
         targetKey: "temperature",
         validAnswers: ["cold_drink_sales"], 
+        explicitObjective: "「最高気温」と「強い正の相関」がある項目を探してください。",
         expectedStrength: "かなり強い正の相関がある",
         hint: "気温が上がると、みんなが飲みたくなる冷たいものは何だろう？",
         causationNote: "【分析結果】「気温」と「清涼飲料水」に強い正の相関があります。暑い日ほど脱水予防やリフレッシュのために購入者が増えるため、発注量を増やす必要があります。"
@@ -251,6 +249,7 @@ export const DRILL_QUESTS = [
         initialY: "customers",
         targetKey: "icecream_sales",
         validAnswers: ["cold_drink_sales"], 
+        explicitObjective: "「アイス売上」と「正の相関」がある（疑似相関）項目を探してください。",
         expectedStrength: "かなり強い正の相関がある",
         hint: "相関は強いけど、これは「疑似相関」の可能性が高いよ。アイスとよく似た売れ方をする飲み物は？",
         causationNote: "【分析結果】正解！ただし注意が必要です。これは「アイスを買うから飲み物を買う」のではなく、「暑いからどちらも売れる」という【疑似相関】です。原因を見誤らないようにしましょう！"
@@ -263,6 +262,7 @@ export const DRILL_QUESTS = [
         initialY: "luck",
         targetKey: "level",
         validAnswers: ["hp", "attack"], 
+        explicitObjective: "「レベル」と「強い正の相関」がある項目を探してください。",
         expectedStrength: "かなり強い正の相関がある",
         hint: "レベルアップで確実に成長するように設定されている、基本ステータス（体力や力）を見てみよう。",
         causationNote: "【分析結果】「レベル」は「HP」や「攻撃力」と強い正の相関があります。このゲームでは、レベルを上げれば基礎能力は確実に向上するように設計されていることが証明されました。"
@@ -275,6 +275,7 @@ export const DRILL_QUESTS = [
         initialY: "icecream_sales",
         targetKey: "rain",
         validAnswers: ["umbrella_sales"],
+        explicitObjective: "「降水量」と「正の相関」がある項目を探してください。",
         expectedStrength: "正の相関がある",
         hint: "雨が降れば降るほど、必要に迫られて売れるものといえば？",
         causationNote: "【分析結果】「降水量」と「傘の売上」に正の相関があります。雨が強くなるほど、傘を持っていない人が緊急で購入するケースが増えるという、わかりやすい因果関係です。"
@@ -287,6 +288,7 @@ export const DRILL_QUESTS = [
         initialY: "study_time",
         targetKey: "score",
         validAnswers: ["height", "commute_time"],
+        explicitObjective: "「テスト点数」と「相関がない」項目を探してください。",
         expectedStrength: "ほとんど相関がない",
         hint: "背の高さや、家から学校までの距離で、テストの点数は決まるかな？",
         causationNote: "【分析結果】正解です！「身長」や「通学時間」は、グラフ全体に点がバラバラに散らばっており、相関が見られません。これを【無相関】と呼び、「関係がないこと」の証明になります。"

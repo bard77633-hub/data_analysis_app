@@ -77,6 +77,15 @@
     50% { opacity: .5; }
 }
 
+/* Flash Animation for Notifications */
+@keyframes flash {
+    0%, 50%, 100% { opacity: 1; background-color: white; }
+    25%, 75% { opacity: 1; background-color: #fbbf24; } /* Amber-400 */
+}
+.animate-flash {
+    animation: flash 1s ease-in-out 3; /* Blink 3 times */
+}
+
 /* Tutorial Plot Animations */
 @keyframes growY {
     from { transform: scaleY(0); opacity: 0; }

@@ -14,31 +14,34 @@ const html = htm.bind(React.createElement);
 // Extra Mission Configuration with Stories
 const EXTRA_MISSION_STAGES = [
     { 
+        type: "cleaning",
         datasetId: "extra_cleaning_1", 
         xKey: "study_time", 
         yKey: "score", 
         targetR: 0.95,
         title: "居眠り先生の入力ミス",
-        intro: "「やってしまった…」徹夜明けの先生が、テスト結果の入力中に居眠りをしてしまったようです。「勉強時間がすごいのに点数が低すぎる」などの、ありえないデータを探して修正してください！",
+        intro: "「やってしまった…」徹夜明けの先生が、テスト結果の入力中に居眠りをしてしまったようです。「勉強時間がすごいのに点数が低すぎる」などの、ありえないデータを探して修正（除外）してください！",
         explanation: "【解説】入力ミス（外れ値）は、データ全体の分析結果を大きく歪めてしまいます。たった1つのミスデータを取り除くだけで、相関係数が劇的に改善し、正しい傾向が見えるようになったはずです。"
     },
-    { 
-        datasetId: "extra_cleaning_2", 
-        xKey: "temperature", 
-        yKey: "cold_drink_sales", 
-        targetR: 0.90,
-        title: "新米バイトの発注ミス？",
-        intro: "「暑い日なのに全然売れてない日があるんです！」新人のバイト君が在庫管理を間違えて、売り切れを起こしていた疑惑があります。気温が高いのに売上が極端に低い日を除外して、本来の需要を確かめてください。",
-        explanation: "【解説】これは「機会損失」のデータです。売り切れなどで記録されなかった異常値を含めたままだと、「暑くても売れない」という誤った分析をしてしまう恐れがあります。"
+    {
+        type: "selection",
+        datasetId: "extra_selection_1",
+        xKey: "study_time",
+        yKey: "score",
+        targetIds: [21, 22, 23],
+        title: "天才肌の生徒を探せ",
+        intro: "「勉強時間は短いのに、なぜか高得点を取る生徒が3人いるらしい…」そんな噂の真相を確かめます。散布図上で『勉強時間が短い（左側）＆点数が高い（上側）』エリアにいる3人のデータを特定（クリックして選択）してください！",
+        explanation: "【解説】散布図を使うと、集団の中で「特異な存在」を一目で見つけることができます。彼らは効率的な勉強法を知っているのかもしれません。平均的な傾向（回帰直線）から大きく外れたデータには、新しい発見が隠れていることがあります。"
     },
     { 
-        datasetId: "extra_cleaning_3", 
-        xKey: "level", 
-        yKey: "hp", 
-        targetR: 0.98,
-        title: "伝説のバグキャラクター",
-        intro: "「レベル50なのにHPが初期値のままのキャラがいるぞ！」ゲームの掲示板でバグ報告が相次いでいます。レベルに見合わない異常なステータスを持つバグキャラクターを特定し、BAN（除外）してください！",
-        explanation: "【解説】システムのエラーやバグによるデータは、ゲームバランスの分析を邪魔します。散布図を使えば、数値のルールから外れた異常なデータを一瞬で見つけ出すことができます。"
+        type: "selection",
+        datasetId: "extra_selection_2", 
+        xKey: "equip_weight", 
+        yKey: "attack", 
+        targetIds: [31, 32, 33],
+        title: "コスパ最強装備の発掘",
+        intro: "「軽くて強い武器があるなら、それが最強だ！」鍛冶屋の親父が豪語しています。『装備重量が軽い（左側）＆攻撃力が高い（上側）』エリアにある、夢のような武器データ3つを見つけ出してください！",
+        explanation: "【解説】データ分析は「トレードオフ（あちらを立てればこちらが立たず）」を超える価値を見つけるのにも役立ちます。通常は重いほど強い武器ですが、例外的に軽くて強い武器を見つけることで、ゲーム攻略が有利になります。"
     }
 ];
 
@@ -403,21 +406,27 @@ const TutorialMode = ({ onFinish }) => {
 /**
  * ドリルクエストウィンドウ (DrillQuestWindow)
  */
-const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart }) => {
+const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart, showExplicitHint }) => {
     const isMobile = window.innerWidth < 768;
-    // PCの場合は画面中央、モバイルの場合は下部
+    // PCの場合は画面中央（正確な計算）、モバイルの場合は下部
     const width = 350;
-    const height = 400; // approximate
-    const initialPos = isMobile 
-        ? { x: 16, y: window.innerHeight - 250 } 
-        : { x: (window.innerWidth / 2) - (width / 2), y: (window.innerHeight / 2) - 150 };
+    const initialPos = useMemo(() => {
+        if (isMobile) {
+            return { x: 16, y: window.innerHeight - 250 };
+        }
+        return { 
+            x: (window.innerWidth / 2) - (width / 2), 
+            y: (window.innerHeight / 2) - 200 
+        };
+    }, [isMobile]);
 
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
     
+    // New Quest Loaded
     useEffect(() => {
         setIsMinimized(false);
-    }, [quest.id, feedback, hasCleared]);
+    }, [quest.id, hasCleared]);
 
     if (hasCleared) return null;
 
@@ -425,6 +434,11 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
     let feedbackContent = null;
     let icon = "🧐";
     let statusClass = "bg-gray-100 border-l-4 border-gray-400";
+    
+    // Show explicit objective if:
+    // 1. It's the first quest (index === 0)
+    // 2. showExplicitHint is true (timer passed or wrong answer)
+    const shouldShowExplicit = index === 0 || showExplicitHint;
     
     if (isCorrect) {
         icon = "🎉";
@@ -462,15 +476,27 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
         `;
     } else {
         feedbackContent = html`
-            <button onClick=${onSubmit} class="w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded shadow-md hover:from-orange-600 hover:to-red-600 transition-transform active:scale-95 flex items-center justify-center">
-                <span>調査報告をする</span>
-            </button>
+            <div class="space-y-3">
+                ${shouldShowExplicit ? html`
+                    <div class="bg-blue-50 text-blue-800 p-2 rounded text-sm font-bold border border-blue-200 animate-fade-in-up">
+                        <span class="mr-1">💡</span> ${quest.explicitObjective}
+                    </div>
+                ` : html`
+                    <div class="text-gray-400 text-xs text-center py-1">
+                        ...調査中... (ヒントまであと少し)
+                    </div>
+                `}
+                <button onClick=${onSubmit} class="w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded shadow-md hover:from-orange-600 hover:to-red-600 transition-transform active:scale-95 flex items-center justify-center">
+                    <span>調査報告をする</span>
+                </button>
+            </div>
         `;
     }
 
     return html`
         <div class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-2 transition-all duration-300
-                   ${isCorrect ? 'border-green-400 ring-4 ring-green-100' : 'border-indigo-100'}"
+                   ${isCorrect ? 'border-green-400 ring-4 ring-green-100' : 'border-indigo-100'}
+                   ${(isMinimized && shouldShowExplicit && !feedback) ? 'animate-flash' : ''}"
             style=${{ top: position.y, left: position.x, width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : `${width}px`), maxHeight: '80vh', touchAction: 'none' }}>
             <div class="px-4 py-2 bg-gray-900 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
                 onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
@@ -497,15 +523,35 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
 /**
  * エクストラミッション用のウィンドウ (ExtraMissionWindow)
  */
-const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targetR, onNext, onComplete }) => {
+const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targetR, onNext, onComplete, excludedIds, targetIds, missionType }) => {
     const isMobile = window.innerWidth < 768;
     const initialPos = isMobile ? { x: 16, y: window.innerHeight - 300 } : { x: window.innerWidth - 380, y: 80 };
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     const [isMinimized, setIsMinimized] = useState(false);
     
-    const isSuccess = correlation >= targetR;
-    const isFinalStage = stage === totalStages - 1;
     const missionInfo = EXTRA_MISSION_STAGES[stage];
+    
+    // Check Success Condition based on Type
+    let isSuccess = false;
+    let progress = 0;
+    
+    if (missionType === 'selection') {
+        // In selection mode, excludedIds act as "selectedIds"
+        // Check if excludedIds exactly matches targetIds
+        const sortedExcluded = [...excludedIds].sort().toString();
+        const sortedTarget = [...targetIds].sort().toString();
+        isSuccess = sortedExcluded === sortedTarget;
+        
+        // Progress for selection: how many correct IDs are selected
+        const correctCount = excludedIds.filter(id => targetIds.includes(id)).length;
+        progress = correctCount / targetIds.length;
+    } else {
+        // Cleaning mode
+        isSuccess = correlation >= targetR;
+        progress = Math.max(0, correlation); // Simplified progress
+    }
+
+    const isFinalStage = stage === totalStages - 1;
 
     return html`
         <div class="fixed z-[90] bg-white shadow-2xl rounded-xl overflow-hidden border-2 transition-all duration-300
@@ -533,13 +579,15 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
                     ${isSuccess ? html`
                          <div class="text-center space-y-3">
                             <div class="text-5xl animate-bounce-slow">✨</div>
-                            <h3 class="text-xl font-bold text-green-600">修正完了！</h3>
+                            <h3 class="text-xl font-bold text-green-600">達成完了！</h3>
                             <div class="bg-green-50 p-3 rounded-lg text-left">
                                 <p class="text-sm text-green-900 leading-relaxed font-medium">${missionInfo.explanation}</p>
                             </div>
-                            <div class="p-3 rounded-xl border border-green-200 text-center font-mono text-xl text-green-800 font-black">
-                                r = ${correlation.toFixed(3)}
-                            </div>
+                            ${missionType === 'cleaning' && html`
+                                <div class="p-3 rounded-xl border border-green-200 text-center font-mono text-xl text-green-800 font-black">
+                                    r = ${correlation.toFixed(3)}
+                                </div>
+                            `}
                             ${isFinalStage ? html`
                                 <button onClick=${onComplete} class="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-all text-lg">
                                     探偵マスター！トップへ 🎓
@@ -552,21 +600,28 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
                         </div>
                     ` : html`
                         <div class="space-y-3">
-                            <h3 class="font-bold text-red-700 text-sm border-b border-red-50 pb-1">指令：異常データを除外せよ</h3>
-                            <p class="text-sm text-gray-800 font-bold">
-                                散布図上で明らかに傾向から外れている<strong class="text-red-600">「点」をクリックして除外</strong>し、正しい相関係数を取り戻してください。
-                            </p>
-                            <div class="space-y-2 bg-gray-50 p-3 rounded-lg">
-                                <div class="flex justify-between font-bold text-xs">
-                                    <span>現在の r</span>
-                                    <span class="${correlation < 0.5 ? 'text-red-500' : 'text-orange-500'}">${correlation.toFixed(3)}</span>
+                            <h3 class="font-bold text-red-700 text-sm border-b border-red-50 pb-1">
+                                ${missionType === 'selection' ? '指令：対象のデータを特定（クリック）せよ' : '指令：異常データを除外せよ'}
+                            </h3>
+                            
+                            ${missionType === 'selection' ? html`
+                                <div class="bg-gray-50 p-3 rounded-lg text-center">
+                                     <div class="text-sm font-bold text-gray-700 mb-2">発見数: <span class="text-xl text-indigo-600">${excludedIds.filter(id => targetIds.includes(id)).length}</span> / ${targetIds.length}</div>
+                                     <p class="text-xs text-gray-500">条件に合う点をクリックして選択してください</p>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
-                                    <div class="bg-red-500 h-full transition-all duration-500 ease-out" style=${{ width: `${Math.max(0, correlation * 100)}%` }}></div>
-                                    <div class="absolute top-0 bottom-0 border-r-2 border-dashed border-white" style=${{ left: `${targetR * 100}%` }}></div>
+                            ` : html`
+                                <div class="space-y-2 bg-gray-50 p-3 rounded-lg">
+                                    <div class="flex justify-between font-bold text-xs">
+                                        <span>現在の r</span>
+                                        <span class="${correlation < 0.5 ? 'text-red-500' : 'text-orange-500'}">${correlation.toFixed(3)}</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                                        <div class="bg-red-500 h-full transition-all duration-500 ease-out" style=${{ width: `${Math.max(0, correlation * 100)}%` }}></div>
+                                        <div class="absolute top-0 bottom-0 border-r-2 border-dashed border-white" style=${{ left: `${targetR * 100}%` }}></div>
+                                    </div>
+                                    <div class="text-right text-[10px] font-bold text-gray-400">Target: ${targetR.toFixed(3)} 以上</div>
                                 </div>
-                                <div class="text-right text-[10px] font-bold text-gray-400">Target: ${targetR.toFixed(3)} 以上</div>
-                            </div>
+                            `}
                         </div>
                     `}
                 </div>
@@ -578,7 +633,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
 /**
  * 散布図コンポーネント
  */
-const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onTogglePoint }) => {
+const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onTogglePoint, visualMode = 'normal' }) => {
     const domain = useMemo(() => {
         if (!data || data.length === 0) return { x: ['auto', 'auto'], y: ['auto', 'auto'] };
         const xValues = data.map(d => d[xConfig.key]);
@@ -601,6 +656,27 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
         ];
     }, [domain, xConfig, yConfig, regression]);
 
+    // Determine cell color based on mode
+    const getCellColor = (id) => {
+        const isExcluded = excludedIds.includes(id);
+        if (visualMode === 'selection') {
+            // In selection mode, excludedIds are "Selected" (Highlighted)
+            return isExcluded ? '#f59e0b' : '#cbd5e1'; // Orange if selected, Grayish if not
+        } else {
+            // Normal/Cleaning mode: excludedIds are "Excluded" (Grayed out)
+            return isExcluded ? '#eee' : '#6366f1'; // Indigo if active
+        }
+    };
+    
+    const getCellStroke = (id) => {
+        const isExcluded = excludedIds.includes(id);
+        if (visualMode === 'selection') {
+            return isExcluded ? '#b45309' : '#94a3b8';
+        } else {
+             return isExcluded ? '#ccc' : 'none';
+        }
+    }
+
     return html`
         <${ResponsiveContainer} width="100%" height="100%">
             <${ComposedChart} margin=${{ top: 20, right: 30, bottom: 20, left: 20 }}>
@@ -615,12 +691,23 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
                             const d = payload[0].payload;
                             if (!d.id) return null;
                             const isExcluded = excludedIds.includes(d.id);
+                            
+                            let statusText = "";
+                            let statusClass = "";
+                            if (visualMode === 'selection') {
+                                statusText = isExcluded ? '選択中' : '未選択';
+                                statusClass = isExcluded ? 'text-orange-600' : 'text-gray-400';
+                            } else {
+                                statusText = isExcluded ? '除外中' : '使用中';
+                                statusClass = isExcluded ? 'text-red-500' : 'text-green-600';
+                            }
+
                             return html`
                                 <div class="bg-white border border-gray-200 p-2 rounded shadow text-xs">
                                     <div class="font-bold mb-1 flex justify-between gap-4">
                                         <span>ID: ${d.id}</span>
-                                        <span class="${isExcluded ? 'text-red-500' : 'text-green-600'}">
-                                            ${isExcluded ? '除外中' : '使用中'}
+                                        <span class="${statusClass}">
+                                            ${statusText}
                                         </span>
                                     </div>
                                     <p class="text-blue-600">${xConfig.label}: ${d[xConfig.key]}</p>
@@ -631,8 +718,7 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
                         return null;
                     }} />
                 <${Scatter} name="Data" data=${data} onClick=${(d) => onTogglePoint(d.id)} cursor="pointer">
-                    ${data.map((entry, index) => html`<${Cell} key=${`cell-${index}`} fill=${excludedIds.includes(entry.id) ? '#eee' : '#6366f1'} 
-                        stroke=${excludedIds.includes(entry.id) ? '#ccc' : 'none'} />`)}
+                    ${data.map((entry, index) => html`<${Cell} key=${`cell-${index}`} fill=${getCellColor(entry.id)} stroke=${getCellStroke(entry.id)} />`)}
                 </${Scatter}>
                 <${Line} data=${lineData} dataKey=${yConfig.key} stroke="#f97316" strokeWidth=${2} dot=${false} activeDot=${false} isAnimationActive=${false} />
             </${ComposedChart}>
@@ -697,12 +783,14 @@ const App = () => {
     const [yKey, setYKey] = useState(DATASETS[0].columns[1].key);
     const [excludedIds, setExcludedIds] = useState([]);
     const [showDataWindow, setShowDataWindow] = useState(false);
-    const [showInputModal, setShowInputModal] = useState(false);
     const [currentQuestIndex, setCurrentQuestIndex] = useState(0);
     const [drillFeedback, setDrillFeedback] = useState(null);
     const [showClearModal, setShowClearModal] = useState(false);
     const [hasCleared, setHasCleared] = useState(false);
     const [extraMissionLevel, setExtraMissionLevel] = useState(0);
+    
+    // Drill Hint Logic
+    const [showExplicitHint, setShowExplicitHint] = useState(false);
 
     const dataset = useMemo(() => availableDatasets.find(d => d.id === datasetId) || availableDatasets[0], [datasetId, availableDatasets]);
     const xColumn = useMemo(() => dataset.columns.find(c => c.key === xKey) || dataset.columns[0], [dataset, xKey]);
@@ -719,6 +807,17 @@ const App = () => {
         const calcStats = (arr) => ({ min: Math.min(...arr), max: Math.max(...arr), mean: MathUtils.calculateMean(arr) });
         return { correlation: r, regression: reg, strength: str, activeCount: xData.length, xStats: calcStats(xData), yStats: calcStats(yData) };
     }, [dataset, xColumn, yColumn, excludedIds]);
+
+    // Timer for explicit hint in Drill Mode
+    useEffect(() => {
+        if (mode === 'drill') {
+            setShowExplicitHint(false);
+            const timer = setTimeout(() => {
+                setShowExplicitHint(true);
+            }, 60000); // 60 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [currentQuestIndex, mode]);
 
     useEffect(() => {
         if (mode === 'drill' && !hasCleared) {
@@ -737,17 +836,22 @@ const App = () => {
 
     const handleDrillSubmit = () => {
         const quest = DRILL_QUESTS[currentQuestIndex];
-        if (datasetId !== quest.datasetId) { setDrillFeedback('incorrect_dataset'); return; }
-        if (xKey === yKey) { setDrillFeedback('same_variable'); return; }
+        if (datasetId !== quest.datasetId) { setDrillFeedback('incorrect_dataset'); setShowExplicitHint(true); return; }
+        if (xKey === yKey) { setDrillFeedback('same_variable'); setShowExplicitHint(true); return; }
         const isTargetX = xKey === quest.targetKey;
         const isTargetY = yKey === quest.targetKey;
         const selectedPair = isTargetX ? yKey : (isTargetY ? xKey : null);
-        if (selectedPair && quest.validAnswers.includes(selectedPair)) { setDrillFeedback('correct'); }
-        else { setDrillFeedback('incorrect'); }
+        if (selectedPair && quest.validAnswers.includes(selectedPair)) { 
+            setDrillFeedback('correct'); 
+        } else { 
+            setDrillFeedback('incorrect');
+            setShowExplicitHint(true); // Show hint on error
+        }
     };
 
     const nextQuest = () => { 
         setDrillFeedback(null); 
+        setShowExplicitHint(false);
         if (currentQuestIndex < DRILL_QUESTS.length - 1) { 
             setCurrentQuestIndex(prev => prev + 1); 
         } else { 
@@ -755,11 +859,26 @@ const App = () => {
             setShowClearModal(true); 
         } 
     };
-    const restartDrill = () => { setShowClearModal(false); setHasCleared(false); setCurrentQuestIndex(0); setDrillFeedback(null); setMode('drill'); };
-    const loadExtraMissionLevel = (levelIndex) => { const config = EXTRA_MISSION_STAGES[levelIndex]; setDatasetId(config.datasetId); setXKey(config.xKey); setYKey(config.yKey); setExcludedIds([]); };
+    const restartDrill = () => { setShowClearModal(false); setHasCleared(false); setCurrentQuestIndex(0); setDrillFeedback(null); setMode('drill'); setShowExplicitHint(false); };
+    
+    const loadExtraMissionLevel = (levelIndex) => { 
+        const config = EXTRA_MISSION_STAGES[levelIndex]; 
+        setDatasetId(config.datasetId); 
+        setXKey(config.xKey); 
+        setYKey(config.yKey); 
+        setExcludedIds([]); 
+    };
     const startExtraMission = () => { setShowClearModal(false); setMode('extra'); setExtraMissionLevel(0); loadExtraMissionLevel(0); };
     const nextExtraMission = () => { if (extraMissionLevel < EXTRA_MISSION_STAGES.length - 1) { const nextLevel = extraMissionLevel + 1; setExtraMissionLevel(nextLevel); loadExtraMissionLevel(nextLevel); } };
     const finishExtraMission = () => { setMode('explanation'); setDatasetId(DATASETS[0].id); setExcludedIds([]); };
+
+    // Visual Mode for ScatterVis
+    const visualMode = useMemo(() => {
+        if (mode === 'extra' && EXTRA_MISSION_STAGES[extraMissionLevel]?.type === 'selection') {
+            return 'selection';
+        }
+        return 'normal';
+    }, [mode, extraMissionLevel]);
 
     return html`
         <div class="h-full flex flex-col font-sans bg-gray-50 transition-all duration-500 overflow-hidden">
@@ -826,7 +945,7 @@ const App = () => {
                                         <div class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> 回帰直線</div>
                                     </div>
                                 </div>
-                                <div class="flex-1"><${ScatterVis} data=${dataset.data} xConfig=${xColumn} yConfig=${yColumn} regression=${stats.regression} excludedIds=${excludedIds} onTogglePoint=${togglePoint} /></div>
+                                <div class="flex-1"><${ScatterVis} data=${dataset.data} xConfig=${xColumn} yConfig=${yColumn} regression=${stats.regression} excludedIds=${excludedIds} onTogglePoint=${togglePoint} visualMode=${visualMode} /></div>
                             </div>
                         </${Card}>
                     </section>
@@ -837,12 +956,12 @@ const App = () => {
                     </aside>
                     
                     <!-- Drill Window Layer inside Main for correct context -->
-                    ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${DRILL_QUESTS[currentQuestIndex]} index=${currentQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} />`}
-                    ${mode === 'extra' && html`<${ExtraMissionWindow} correlation=${stats.correlation} activeCount=${stats.activeCount} stage=${extraMissionLevel} totalStages=${EXTRA_MISSION_STAGES.length} targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR} onNext=${nextExtraMission} onComplete=${finishExtraMission} />`}
+                    ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${DRILL_QUESTS[currentQuestIndex]} index=${currentQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} showExplicitHint=${showExplicitHint} />`}
+                    ${mode === 'extra' && html`<${ExtraMissionWindow} correlation=${stats.correlation} activeCount=${stats.activeCount} stage=${extraMissionLevel} totalStages=${EXTRA_MISSION_STAGES.length} targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR} targetIds=${EXTRA_MISSION_STAGES[extraMissionLevel].targetIds} missionType=${EXTRA_MISSION_STAGES[extraMissionLevel].type} excludedIds=${excludedIds} onNext=${nextExtraMission} onComplete=${finishExtraMission} />`}
                 </main>
             `}
 
-            ${showDataWindow && html`<${FloatingDataWindow} data=${dataset.data} columns=${dataset.columns} excludedIds=${excludedIds} onTogglePoint=${togglePoint} onClose=${() => setShowDataWindow(false)} />`}
+            ${showDataWindow && html`<${FloatingDataWindow} data=${dataset.data} columns=${dataset.columns} excludedIds=${excludedIds} onTogglePoint=${togglePoint} onClose=${() => setShowDataWindow(false)} visualMode=${visualMode} />`}
             ${showClearModal && html`<${DrillClearModal} onRestart=${restartDrill} onExploration=${() => {setShowClearModal(false); setMode('exploration');}} onExtraMission=${startExtraMission} />`}
         </div>
     `;
@@ -867,7 +986,7 @@ const DrillClearModal = ({ onRestart, onExploration, onExtraMission }) => html`
     </div>
 `;
 
-const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose }) => {
+const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose, visualMode }) => {
     const isMobile = window.innerWidth < 768;
     const initialPos = isMobile ? { x: 10, y: 100 } : { x: 20, y: 150 };
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
