@@ -412,7 +412,7 @@ const TutorialMode = ({ onFinish }) => {
 /**
  * ドリルクエストウィンドウ (DrillQuestWindow)
  */
-const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart, showExplicitHint }) => {
+const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart }) => {
     const isMobile = window.innerWidth < 768;
     // PCの場合は画面中央（正確な計算）、モバイルの場合は下部
     const width = 350;
@@ -440,11 +440,6 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
     let feedbackContent = null;
     let icon = "🧐";
     let statusClass = "bg-gray-100 border-l-4 border-gray-400";
-    
-    // Show explicit objective if:
-    // 1. It's the first quest (index === 0)
-    // 2. showExplicitHint is true (timer passed or wrong answer)
-    const shouldShowExplicit = index === 0 || showExplicitHint;
     
     if (isCorrect) {
         icon = "🎉";
@@ -484,15 +479,9 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
     } else {
         feedbackContent = html`
             <div class="space-y-3">
-                ${shouldShowExplicit ? html`
-                    <div class="bg-blue-50 text-blue-800 p-2 rounded text-sm font-bold border border-blue-200 animate-fade-in-up">
-                        <span class="mr-1">💡</span> ${quest.explicitObjective}
-                    </div>
-                ` : html`
-                    <div class="text-gray-400 text-xs text-center py-1">
-                        ...調査中... (ヒントまであと少し)
-                    </div>
-                `}
+                <div class="text-gray-400 text-xs text-center py-1">
+                     （データソースと軸を選んで調査しよう）
+                </div>
                 <button onClick=${onSubmit} class="w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded shadow-md hover:from-orange-600 hover:to-red-600 transition-transform active:scale-95 flex items-center justify-center">
                     <span>調査報告をする</span>
                 </button>
@@ -503,7 +492,7 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
     return html`
         <div class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-2 transition-all duration-300
                    ${isCorrect ? 'border-green-400 ring-4 ring-green-100' : 'border-indigo-100'}
-                   ${(isMinimized && shouldShowExplicit && !feedback) ? 'animate-flash' : ''}"
+                   ${(isMinimized && !feedback) ? 'animate-flash' : ''}"
             style=${{ top: position.y, left: position.x, width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : `${width}px`), maxHeight: '80vh', touchAction: 'none' }}>
             <div class="px-4 py-2 bg-gray-900 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
                 onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
@@ -518,6 +507,15 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
             ${!isMinimized && html`
                 <div class="p-4 flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
                     <div class="text-gray-800 font-bold text-base leading-snug">${quest.text}</div>
+                    
+                    <!-- 常時表示する目的 -->
+                    <div class="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm font-bold border border-blue-200 shadow-sm animate-fade-in-up">
+                        <div class="flex items-start gap-2">
+                            <span class="text-lg">💡</span>
+                            <span class="mt-0.5">${quest.explicitObjective}</span>
+                        </div>
+                    </div>
+
                     <div class="rounded-lg p-3 ${statusClass} transition-colors duration-300">
                         ${feedbackContent}
                     </div>
@@ -798,9 +796,6 @@ const App = () => {
     
     // Game Completion State
     const [isGameComplete, setIsGameComplete] = useState(false);
-    
-    // Drill Hint Logic
-    const [showExplicitHint, setShowExplicitHint] = useState(false);
 
     const dataset = useMemo(() => availableDatasets.find(d => d.id === datasetId) || availableDatasets[0], [datasetId, availableDatasets]);
     const xColumn = useMemo(() => dataset.columns.find(c => c.key === xKey) || dataset.columns[0], [dataset, xKey]);
@@ -817,17 +812,6 @@ const App = () => {
         const calcStats = (arr) => ({ min: Math.min(...arr), max: Math.max(...arr), mean: MathUtils.calculateMean(arr) });
         return { correlation: r, regression: reg, strength: str, activeCount: xData.length, xStats: calcStats(xData), yStats: calcStats(yData) };
     }, [dataset, xColumn, yColumn, excludedIds]);
-
-    // Timer for explicit hint in Drill Mode
-    useEffect(() => {
-        if (mode === 'drill') {
-            setShowExplicitHint(false);
-            const timer = setTimeout(() => {
-                setShowExplicitHint(true);
-            }, 60000); // 60 seconds
-            return () => clearTimeout(timer);
-        }
-    }, [currentQuestIndex, mode]);
 
     useEffect(() => {
         if (mode === 'drill' && !hasCleared) {
@@ -846,8 +830,8 @@ const App = () => {
 
     const handleDrillSubmit = () => {
         const quest = DRILL_QUESTS[currentQuestIndex];
-        if (datasetId !== quest.datasetId) { setDrillFeedback('incorrect_dataset'); setShowExplicitHint(true); return; }
-        if (xKey === yKey) { setDrillFeedback('same_variable'); setShowExplicitHint(true); return; }
+        if (datasetId !== quest.datasetId) { setDrillFeedback('incorrect_dataset'); return; }
+        if (xKey === yKey) { setDrillFeedback('same_variable'); return; }
         
         // Special Logic for HP in Q6
         const isTargetX = xKey === quest.targetKey;
@@ -863,13 +847,11 @@ const App = () => {
             setDrillFeedback('correct'); 
         } else { 
             setDrillFeedback('incorrect');
-            setShowExplicitHint(true); // Show hint on error
         }
     };
 
     const nextQuest = () => { 
         setDrillFeedback(null); 
-        setShowExplicitHint(false);
         if (currentQuestIndex < DRILL_QUESTS.length - 1) { 
             setCurrentQuestIndex(prev => prev + 1); 
         } else { 
@@ -877,7 +859,7 @@ const App = () => {
             setShowClearModal(true); 
         } 
     };
-    const restartDrill = () => { setShowClearModal(false); setHasCleared(false); setCurrentQuestIndex(0); setDrillFeedback(null); setMode('drill'); setShowExplicitHint(false); };
+    const restartDrill = () => { setShowClearModal(false); setHasCleared(false); setCurrentQuestIndex(0); setDrillFeedback(null); setMode('drill'); };
     
     const loadExtraMissionLevel = (levelIndex) => { 
         const config = EXTRA_MISSION_STAGES[levelIndex]; 
@@ -989,7 +971,7 @@ const App = () => {
                     </aside>
                     
                     <!-- Drill Window Layer inside Main for correct context -->
-                    ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${DRILL_QUESTS[currentQuestIndex]} index=${currentQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} showExplicitHint=${showExplicitHint} />`}
+                    ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${DRILL_QUESTS[currentQuestIndex]} index=${currentQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} />`}
                     ${mode === 'extra' && html`<${ExtraMissionWindow} correlation=${stats.correlation} activeCount=${stats.activeCount} stage=${extraMissionLevel} totalStages=${EXTRA_MISSION_STAGES.length} targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR} targetIds=${EXTRA_MISSION_STAGES[extraMissionLevel].targetIds} missionType=${EXTRA_MISSION_STAGES[extraMissionLevel].type} excludedIds=${excludedIds} onNext=${nextExtraMission} onComplete=${finishExtraMission} />`}
                 </main>
             `}
