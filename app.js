@@ -30,7 +30,7 @@ const EXTRA_MISSION_STAGES = [
         yKey: "score",
         targetIds: [21, 22, 23],
         title: "天才肌の生徒を探せ",
-        intro: "「勉強時間は短いのに、なぜか高得点を取る生徒が3人いるらしい…」そんな噂の真相を確かめます。散布図上で『勉強時間が短い（左側）＆点数が高い（上側）』エリアにいる3人のデータを特定（クリックして選択）してください！",
+        intro: "「勉強時間は短いのに、なぜか高得点を取る生徒が3人いるらしい…」そんな噂の真相を確かめます。散布図上で『勉強時間が短い（左側）＆点数が高い（上側）』エリアにいる3人のデータを特定（クリックして選択）してください！ ※紛らわしい生徒もいるので注意！",
         explanation: "【解説】散布図を使うと、集団の中で「特異な存在」を一目で見つけることができます。彼らは効率的な勉強法を知っているのかもしれません。平均的な傾向（回帰直線）から大きく外れたデータには、新しい発見が隠れていることがあります。"
     },
     { 
@@ -38,10 +38,10 @@ const EXTRA_MISSION_STAGES = [
         datasetId: "extra_selection_2", 
         xKey: "equip_weight", 
         yKey: "attack", 
-        targetIds: [31, 32, 33],
-        title: "コスパ最強装備の発掘",
-        intro: "「軽くて強い武器があるなら、それが最強だ！」鍛冶屋の親父が豪語しています。『装備重量が軽い（左側）＆攻撃力が高い（上側）』エリアにある、夢のような武器データ3つを見つけ出してください！",
-        explanation: "【解説】データ分析は「トレードオフ（あちらを立てればこちらが立たず）」を超える価値を見つけるのにも役立ちます。通常は重いほど強い武器ですが、例外的に軽くて強い武器を見つけることで、ゲーム攻略が有利になります。"
+        targetIds: [33],
+        title: "伝説の武器を発掘せよ",
+        intro: "「軽くて強い武器はいくつかあるが、常識外れの性能を持つ"伝説の1本"があるらしい」鍛冶屋の親父からの依頼です。『非常に軽いのに、攻撃力が飛び抜けて高い』究極のデータを1つだけ特定してください！",
+        explanation: "【解説】データ分析は「トレードオフ（あちらを立てればこちらが立たず）」を超える価値を見つけるのにも役立ちます。良いデータの中でも、群を抜いて優れた外れ値（アウトライヤー）を見つけることが、最強への近道です。"
     }
 ];
 
@@ -371,6 +371,12 @@ const TutorialMode = ({ onFinish }) => {
     ];
 
     const current = pages[step];
+    
+    // Step 1 check logic
+    const canProceed = useMemo(() => {
+        if (step === 1 && plotStep < 3) return false;
+        return true;
+    }, [step, plotStep]);
 
     return html`
         <div class="flex-1 flex flex-col min-h-0 p-4 md:p-8 xl:max-w-6xl mx-auto w-full">
@@ -393,8 +399,8 @@ const TutorialMode = ({ onFinish }) => {
                     <div class="flex space-x-2">
                         ${pages.map((_, i) => html`<div class="w-3 h-3 rounded-full transition-all ${i === step ? 'bg-indigo-600' : 'bg-gray-200'}"></div>`)}
                     </div>
-                    <button onClick=${() => setStep(Math.min(pages.length - 1, step + 1))} disabled=${step === pages.length - 1}
-                        class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-md disabled:opacity-0 transition-all">
+                    <button onClick=${() => setStep(Math.min(pages.length - 1, step + 1))} disabled=${step === pages.length - 1 || !canProceed}
+                        class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                         次へ →
                     </button>
                 </div>
@@ -461,6 +467,7 @@ const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, has
         if (feedback === 'incorrect') { message = `ヒント: ${quest.hint}`; color="orange"; }
         else if (feedback === 'incorrect_dataset') { message = "まずはデータソース設定で、対象のデータセットに切り替えよう！"; color="red"; }
         else if (feedback === 'same_variable') { message = "同じ項目同士だと相関が1.0になってしまうよ。別の項目を選ぼう。"; color="yellow"; }
+        else if (feedback === 'stronger_correlation_available') { message = "相関はあるけれど…もっと強い相関があるステータスはありませんか？"; color="blue"; }
 
         statusClass = `bg-${color}-50 border-l-4 border-${color}-400`;
         feedbackContent = html`
@@ -589,8 +596,8 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
                                 </div>
                             `}
                             ${isFinalStage ? html`
-                                <button onClick=${onComplete} class="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-all text-lg">
-                                    探偵マスター！トップへ 🎓
+                                <button onClick=${onComplete} class="w-full py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-all text-lg animate-pulse">
+                                    探偵マスターの称号を受け取る 🎓
                                 </button>
                             ` : html`
                                 <button onClick=${onNext} class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all text-lg">
@@ -789,6 +796,9 @@ const App = () => {
     const [hasCleared, setHasCleared] = useState(false);
     const [extraMissionLevel, setExtraMissionLevel] = useState(0);
     
+    // Game Completion State
+    const [isGameComplete, setIsGameComplete] = useState(false);
+    
     // Drill Hint Logic
     const [showExplicitHint, setShowExplicitHint] = useState(false);
 
@@ -838,9 +848,17 @@ const App = () => {
         const quest = DRILL_QUESTS[currentQuestIndex];
         if (datasetId !== quest.datasetId) { setDrillFeedback('incorrect_dataset'); setShowExplicitHint(true); return; }
         if (xKey === yKey) { setDrillFeedback('same_variable'); setShowExplicitHint(true); return; }
+        
+        // Special Logic for HP in Q6
         const isTargetX = xKey === quest.targetKey;
         const isTargetY = yKey === quest.targetKey;
         const selectedPair = isTargetX ? yKey : (isTargetY ? xKey : null);
+        
+        if (quest.id === 6 && selectedPair === 'hp') {
+            setDrillFeedback('stronger_correlation_available');
+            return;
+        }
+
         if (selectedPair && quest.validAnswers.includes(selectedPair)) { 
             setDrillFeedback('correct'); 
         } else { 
@@ -870,7 +888,12 @@ const App = () => {
     };
     const startExtraMission = () => { setShowClearModal(false); setMode('extra'); setExtraMissionLevel(0); loadExtraMissionLevel(0); };
     const nextExtraMission = () => { if (extraMissionLevel < EXTRA_MISSION_STAGES.length - 1) { const nextLevel = extraMissionLevel + 1; setExtraMissionLevel(nextLevel); loadExtraMissionLevel(nextLevel); } };
-    const finishExtraMission = () => { setMode('explanation'); setDatasetId(DATASETS[0].id); setExcludedIds([]); };
+    const finishExtraMission = () => { 
+        setIsGameComplete(true);
+        setMode('exploration'); 
+        setDatasetId(DATASETS[0].id); 
+        setExcludedIds([]); 
+    };
 
     // Visual Mode for ScatterVis
     const visualMode = useMemo(() => {
@@ -880,14 +903,24 @@ const App = () => {
         return 'normal';
     }, [mode, extraMissionLevel]);
 
+    const bgClass = useMemo(() => {
+        if (isGameComplete) return 'bg-gradient-to-br from-indigo-50 to-purple-50';
+        return 'bg-gray-50';
+    }, [isGameComplete]);
+
     return html`
-        <div class="h-full flex flex-col font-sans bg-gray-50 transition-all duration-500 overflow-hidden">
+        <div class="h-full flex flex-col font-sans transition-all duration-1000 overflow-hidden ${bgClass}">
             <header class="bg-white px-6 py-4 flex flex-col lg:flex-row justify-between items-center shadow-md z-10 gap-4 border-b">
                 <div class="flex items-center space-x-4">
                     <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     </div>
-                    <div><h1 class="text-xl font-black text-gray-900 tracking-tight">Data Detective Challenge</h1></div>
+                    <div>
+                        <h1 class="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                            Data Detective Challenge
+                            ${isGameComplete && html`<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full border border-yellow-300 animate-pulse">🏆 探偵マスター</span>`}
+                        </h1>
+                    </div>
                 </div>
                 <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
                     <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'explanation' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}" onClick=${() => setMode('explanation')}>📚 解説</button>

@@ -158,12 +158,15 @@ export const DATASETS = [
             // Targets: Low Study, High Score
             { id: 21, study_time: 20, score: 90 },
             { id: 22, study_time: 30, score: 95 },
-            { id: 23, study_time: 15, score: 85 }
+            { id: 23, study_time: 15, score: 85 },
+            // Decoys: Low Study, but Average Score (Not Genius)
+            { id: 91, study_time: 25, score: 60 }, 
+            { id: 92, study_time: 35, score: 65 }
         ]
     },
     {
         id: "extra_selection_2",
-        name: "【探索用 Lv.2】軽量アタッカー",
+        name: "【探索用 Lv.2】伝説の武器",
         description: "装備と攻撃力のデータ。",
         columns: [
             { key: "equip_weight", label: "装備重量", type: "number", min: 0, max: 100 },
@@ -180,10 +183,11 @@ export const DATASETS = [
             { id: 8, equip_weight: 30, attack: 40 },
             { id: 9, equip_weight: 25, attack: 35 },
             { id: 10, equip_weight: 10, attack: 20 },
-            // Targets: Low Weight, High Attack
-            { id: 31, equip_weight: 15, attack: 160 },
-            { id: 32, equip_weight: 20, attack: 170 },
-            { id: 33, equip_weight: 10, attack: 150 }
+            // Good weapons (Decoys)
+            { id: 31, equip_weight: 15, attack: 140 }, // Good
+            { id: 32, equip_weight: 20, attack: 150 }, // Good
+            // The Legendary One (Target)
+            { id: 33, equip_weight: 5, attack: 195 } // Extreme
         ]
     }
 ];
@@ -209,11 +213,11 @@ export const DRILL_QUESTS = [
         initialX: "smartphone_time",
         initialY: "height",
         targetKey: "smartphone_time",
-        validAnswers: ["score"],
+        validAnswers: ["score", "study_time"],
         explicitObjective: "「スマホ使用時間」と「負の相関」がある項目を探してください。",
         expectedStrength: "かなり強い負の相関がある",
         hint: "スマホ時間を横軸にしたとき、右肩下がり（負の相関）になる項目を探してみよう。",
-        causationNote: "【分析結果】「スマホ時間」と「成績」には負の相関が見つかりました。スマホの長時間利用が睡眠や学習時間を圧迫し、成績低下の一因となっている可能性が高いです。"
+        causationNote: "【分析結果】「スマホ時間」と「成績」には負の相関が見つかりました（また、勉強時間も減少傾向にあります）。スマホの長時間利用が睡眠や学習時間を圧迫し、成績低下の一因となっている可能性が高いです。"
     },
     {
         id: 3,
@@ -261,15 +265,15 @@ export const DRILL_QUESTS = [
         initialX: "level",
         initialY: "luck",
         targetKey: "level",
-        validAnswers: ["hp", "attack"], 
+        validAnswers: ["attack"], 
         explicitObjective: "「レベル」と「強い正の相関」がある項目を探してください。",
         expectedStrength: "かなり強い正の相関がある",
         hint: "レベルアップで確実に成長するように設定されている、基本ステータス（体力や力）を見てみよう。",
-        causationNote: "【分析結果】「レベル」は「HP」や「攻撃力」と強い正の相関があります。このゲームでは、レベルを上げれば基礎能力は確実に向上するように設計されていることが証明されました。"
+        causationNote: "【分析結果】「レベル」は「攻撃力」と非常に強い正の相関があります。このゲームでは、レベルを上げれば力は確実に向上するように設計されていることが証明されました。"
     },
     {
         id: 7,
-        text: "【調査依頼：エリアマネージャー】「雨の日に特有の売上傾向があるか知りたい。雨量と連動して売れる商品はあるか？」",
+        text: "【調査依頼：エリアマネージャー】「雨の日に特有の売上傾向があるか知りたい。雨量と連動して最も売れる商品は何か？」",
         datasetId: "convenience",
         initialX: "rain",
         initialY: "icecream_sales",
@@ -278,10 +282,23 @@ export const DRILL_QUESTS = [
         explicitObjective: "「降水量」と「正の相関」がある項目を探してください。",
         expectedStrength: "正の相関がある",
         hint: "雨が降れば降るほど、必要に迫られて売れるものといえば？",
-        causationNote: "【分析結果】「降水量」と「傘の売上」に正の相関があります。雨が強くなるほど、傘を持っていない人が緊急で購入するケースが増えるという、わかりやすい因果関係です。"
+        causationNote: "【分析結果】「降水量」と「傘の売上」に正の相関があります。雨が強くなるほど、傘を持っていない人が緊急で購入するケースが増えるという、わかりやすい直接的な因果関係です。"
     },
     {
         id: 8,
+        text: "【追加調査依頼：マネージャー】「雨の日には傘以外にも売れるものがあるらしい。傘以外で、雨量と関係がある商品を探してくれ」",
+        datasetId: "convenience",
+        initialX: "rain",
+        initialY: "umbrella_sales",
+        targetKey: "rain",
+        validAnswers: ["hot_coffee_sales"],
+        explicitObjective: "「降水量」と「正の相関」がある、傘以外の商品を探してください。",
+        expectedStrength: "正の相関がある",
+        hint: "雨が降ると気温はどうなる？寒くなると飲みたくなるものは？",
+        causationNote: "【分析結果】素晴らしい！「ホットコーヒー」も雨量と正の相関があります。「雨が降る→気温が下がる→温かいものが売れる」という、間に気温を挟んだ間接的な因果関係（風が吹けば桶屋が儲かる的な関係）が見えましたね。"
+    },
+    {
+        id: 9,
         text: "【調査依頼：統計の先生】「最後は難問だ。『全く関係がない』ことを証明するのも重要だ。テストの点数と関係ない項目を見つけてくれ」",
         datasetId: "students",
         initialX: "score",
