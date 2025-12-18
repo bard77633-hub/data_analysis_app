@@ -40,7 +40,7 @@ const EXTRA_MISSION_STAGES = [
         yKey: "attack", 
         targetIds: [33],
         title: "伝説の武器を発掘せよ",
-        intro: "「軽くて強い武器はいくつかあるが、常識外れの性能を持つ"伝説の1本"があるらしい」鍛冶屋の親父からの依頼です。『非常に軽いのに、攻撃力が飛び抜けて高い』究極のデータを1つだけ特定してください！",
+        intro: "「軽くて強い武器はいくつかあるが、常識外れの性能を持つ\"伝説の1本\"があるらしい」鍛冶屋の親父からの依頼です。『非常に軽いのに、攻撃力が飛び抜けて高い』究極のデータを1つだけ特定してください！",
         explanation: "【解説】データ分析は「トレードオフ（あちらを立てればこちらが立たず）」を超える価値を見つけるのにも役立ちます。良いデータの中でも、群を抜いて優れた外れ値（アウトライヤー）を見つけることが、最強への近道です。"
     }
 ];
@@ -105,7 +105,7 @@ const TutorialMode = ({ onFinish }) => {
             <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
             <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
             <path d="M15 65 L 85 15" stroke="#ef4444" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
-            ${[{x:20,y:62},{x:35,y:52},{x:45,y:40},{x:58,y:35},{x:70,y:25},{x:82,y:18}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#ef4444" />`)}
+            ${[{x:20,y:62},{x:35,y:52},{x:45,y:40},{x:58,y:35},{x:70,y:25},{x:82,y:18}].map((p, i) => html`<circle key=${i} cx=${p.x} cy=${p.y} r="2" fill="#ef4444" />`)}
         </svg>
     `;
 
@@ -114,7 +114,7 @@ const TutorialMode = ({ onFinish }) => {
             <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
             <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
             <path d="M15 15 L 85 65" stroke="#10b981" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
-            ${[{x:20,y:18},{x:35,y:25},{x:45,y:40},{x:58,y:45},{x:70,y:55},{x:82,y:62}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#10b981" />`)}
+            ${[{x:20,y:18},{x:35,y:25},{x:45,y:40},{x:58,y:45},{x:70,y:55},{x:82,y:62}].map((p, i) => html`<circle key=${i} cx=${p.x} cy=${p.y} r="2" fill="#10b981" />`)}
         </svg>
     `;
 
@@ -152,7 +152,7 @@ const TutorialMode = ({ onFinish }) => {
                             </thead>
                             <tbody class="divide-y">
                                 ${demoData.map((d, i) => html`
-                                    <tr class="transition-all duration-300 ${plotStep > i ? 'bg-indigo-50' : ''}">
+                                    <tr key=${d.id} class="transition-all duration-300 ${plotStep > i ? 'bg-indigo-50' : ''}">
                                         <td class="p-4 text-center font-mono font-bold">${d.temp}℃</td>
                                         <td class="p-4 text-center font-mono font-bold text-green-600">${d.sales}個</td>
                                     </tr>
@@ -226,7 +226,7 @@ const TutorialMode = ({ onFinish }) => {
                             <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
                                 <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
                                 <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
-                                ${[{x:25,y:20},{x:40,y:60},{x:55,y:30},{x:70,y:55},{x:30,y:45},{x:75,y:25}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#666" />`)}
+                                ${[{x:25,y:20},{x:40,y:60},{x:55,y:30},{x:70,y:55},{x:30,y:45},{x:75,y:25}].map((p, i) => html`<circle key=${i} cx=${p.x} cy=${p.y} r="2" fill="#666" />`)}
                             </svg>
                         </div>
                         <h4 class="font-black text-2xl text-gray-700 mb-2">相関なし</h4>
@@ -397,7 +397,7 @@ const TutorialMode = ({ onFinish }) => {
                         ← 戻る
                     </button>
                     <div class="flex space-x-2">
-                        ${pages.map((_, i) => html`<div class="w-3 h-3 rounded-full transition-all ${i === step ? 'bg-indigo-600' : 'bg-gray-200'}"></div>`)}
+                        ${pages.map((_, i) => html`<div key=${i} class="w-3 h-3 rounded-full transition-all ${i === step ? 'bg-indigo-600' : 'bg-gray-200'}"></div>`)}
                     </div>
                     <button onClick=${() => setStep(Math.min(pages.length - 1, step + 1))} disabled=${step === pages.length - 1 || !canProceed}
                         class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all">
@@ -1037,15 +1037,15 @@ const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose
                         <tr>
                             <th class="p-2 border-b">使用</th>
                             <th class="p-2 border-b">ID</th>
-                            ${columns.map(c => html`<th class="p-2 border-b">${c.label}</th>`)}
+                            ${columns.map(c => html`<th key=${c.key} class="p-2 border-b">${c.label}</th>`)}
                         </tr>
                     </thead>
                     <tbody>
                         ${data.map(row => html`
-                            <tr class="border-b ${excludedIds.includes(row.id) ? 'bg-gray-100 text-gray-400' : ''}">
+                            <tr key=${row.id} class="border-b ${excludedIds.includes(row.id) ? 'bg-gray-100 text-gray-400' : ''}">
                                 <td class="p-2 text-center"><input type="checkbox" checked=${!excludedIds.includes(row.id)} onChange=${() => onTogglePoint(row.id)} /></td>
                                 <td class="p-2">${row.id}</td>
-                                ${columns.map(c => html`<td class="p-2">${row[c.key]}</td>`)}
+                                ${columns.map(c => html`<td key=${c.key} class="p-2">${row[c.key]}</td>`)}
                             </tr>
                         `)}
                     </tbody>
