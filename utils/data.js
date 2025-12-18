@@ -74,41 +74,6 @@ export const DATASETS = [
             { id: 20, temperature: 31.5, customers: 720, icecream_sales: 110, cold_drink_sales: 330, hot_coffee_sales: 22, umbrella_sales: 0, rain: 0 }
         ]
     },
-    {
-        id: "rpg_game",
-        name: "RPGキャラクターのステータス",
-        description: "あるRPGゲームのプレイヤーキャラクター20体のステータスデータ。",
-        columns: [
-            { key: "level", label: "レベル", type: "number", min: 1, max: 50 },
-            { key: "hp", label: "最大HP", type: "number", min: 100, max: 5000 },
-            { key: "attack", label: "攻撃力", type: "number", min: 10, max: 200 },
-            { key: "speed", label: "素早さ", type: "number", min: 0, max: 100 },
-            { key: "equip_weight", label: "装備重量", type: "number", min: 0, max: 100 },
-            { key: "luck", label: "運", type: "number", min: 0, max: 100 }
-        ],
-        data: [
-            { id: 1, level: 10, hp: 500, attack: 30, speed: 80, equip_weight: 10, luck: 50 },
-            { id: 2, level: 45, hp: 4500, attack: 180, speed: 20, equip_weight: 90, luck: 10 },
-            { id: 3, level: 25, hp: 2500, attack: 100, speed: 50, equip_weight: 50, luck: 80 },
-            { id: 4, level: 5, hp: 300, attack: 15, speed: 70, equip_weight: 15, luck: 20 },
-            { id: 5, level: 50, hp: 4800, attack: 195, speed: 90, equip_weight: 5, luck: 90 },
-            { id: 6, level: 30, hp: 3000, attack: 120, speed: 40, equip_weight: 60, luck: 40 },
-            { id: 7, level: 15, hp: 1500, attack: 60, speed: 60, equip_weight: 30, luck: 60 },
-            { id: 8, level: 40, hp: 4000, attack: 160, speed: 30, equip_weight: 70, luck: 30 },
-            { id: 9, level: 20, hp: 2000, attack: 80, speed: 55, equip_weight: 40, luck: 55 },
-            { id: 10, level: 35, hp: 3500, attack: 140, speed: 35, equip_weight: 65, luck: 45 },
-            { id: 11, level: 12, hp: 1200, attack: 45, speed: 65, equip_weight: 25, luck: 25 },
-            { id: 12, level: 48, hp: 4700, attack: 190, speed: 15, equip_weight: 95, luck: 15 },
-            { id: 13, level: 22, hp: 2200, attack: 90, speed: 52, equip_weight: 45, luck: 75 },
-            { id: 14, level: 8, hp: 400, attack: 25, speed: 75, equip_weight: 12, luck: 85 },
-            { id: 15, level: 42, hp: 4200, attack: 170, speed: 25, equip_weight: 80, luck: 5 },
-            { id: 16, level: 18, hp: 1800, attack: 70, speed: 58, equip_weight: 35, luck: 95 },
-            { id: 17, level: 38, hp: 3800, attack: 150, speed: 28, equip_weight: 75, luck: 35 },
-            { id: 18, level: 28, hp: 2800, attack: 110, speed: 45, equip_weight: 55, luck: 65 },
-            { id: 19, level: 4, hp: 250, attack: 12, speed: 85, equip_weight: 8, luck: 12 },
-            { id: 20, level: 33, hp: 3300, attack: 130, speed: 38, equip_weight: 62, luck: 70 }
-        ]
-    },
     // --- Extra Missions (Data Cleaning & Searching) ---
     {
         id: "extra_cleaning_1",
