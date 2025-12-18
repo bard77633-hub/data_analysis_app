@@ -65,8 +65,8 @@ const Card = ({ title, children, className = "" }) => html`
 `;
 
 /**
- * 解説モードコンポーネント
- * 視認性を重視しつつ、デザインの太さや丸みは標準的に戻す
+ * 解説モードコンポーネント (TutorialMode)
+ * デザインは標準に戻し、内容はより丁寧に、図解を復活させる。
  */
 const TutorialMode = ({ onFinish }) => {
     const [step, setStep] = useState(0);
@@ -75,29 +75,32 @@ const TutorialMode = ({ onFinish }) => {
 
     const pages = [
         {
-            title: "散布図（さんぷず）ってなに？",
+            title: "散布図（さんぷず）とは？",
             content: html`
-                <div class="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-10 animate-fade-in-up py-8">
-                    <div class="text-9xl animate-bounce-slow">📊</div>
+                <div class="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-8 animate-fade-in-up py-8">
+                    <div class="text-9xl animate-bounce-slow drop-shadow-sm">📊</div>
                     <div class="space-y-6 max-w-4xl">
-                        <p class="text-2xl md:text-3xl lg:text-4xl text-gray-700 leading-relaxed">
-                            「気温が上がると、アイスが売れる」<br/>
-                            「勉強時間を増やすと、テストの点数が上がる」
+                        <p class="text-xl md:text-2xl text-gray-700 leading-relaxed">
+                            「勉強を頑張るほど、テストの点数は上がるのかな？」<br/>
+                            「気温が上がると、アイスの売上は増えるのかな？」
                         </p>
-                        <p class="text-3xl md:text-4xl lg:text-5xl text-gray-800 font-black">
-                            <span class="text-indigo-600 border-b-4 border-indigo-200">2つのデータの関係</span>を<br/>
-                            視覚的に調べるためのグラフです。
+                        <p class="text-2xl md:text-3xl text-gray-800 font-bold">
+                            このように、<span class="text-indigo-600 border-b-2 border-indigo-200">2つのデータにどのような関係があるか</span>を<br/>
+                            「点」を使って視覚的に表したグラフが<span class="text-indigo-600 font-black">散布図（さんぷず）</span>です。
+                        </p>
+                        <p class="text-gray-500 text-lg">
+                            データをグラフにすることで、数字の列だけでは気づけない<br/>「傾向」や「つながり」が見えてきます。
                         </p>
                     </div>
                 </div>
             `
         },
         {
-            title: "ステップ1：グラフの作り方",
+            title: "ステップ1：表から点を打ってみよう",
             content: html`
                 <div class="flex flex-col lg:flex-row gap-10 min-h-[60vh] items-center justify-center animate-fade-in-up py-6">
                     <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                        <h4 class="font-bold text-xl text-center mb-4 text-indigo-600">データの表</h4>
+                        <h4 class="font-bold text-xl text-center mb-4 text-indigo-600">アイス売上のデータ表</h4>
                         <table class="w-full text-lg">
                             <thead class="bg-indigo-50">
                                 <tr><th class="p-3">気温(℃)</th><th class="p-3">売上(個)</th></tr>
@@ -114,7 +117,7 @@ const TutorialMode = ({ onFinish }) => {
                         <div class="mt-6 flex flex-col gap-3">
                             <button onClick=${() => setPlotStep(prev => Math.min(prev + 1, 3))}
                                 class="px-6 py-4 bg-indigo-600 text-white rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
-                                点を1つずつ打つ ➡
+                                1つずつプロットする ➡
                             </button>
                             <button onClick=${() => setPlotStep(0)} class="text-gray-400 font-bold hover:text-gray-600 text-sm">リセット</button>
                         </div>
@@ -124,7 +127,7 @@ const TutorialMode = ({ onFinish }) => {
                             <line x1="50" y1="250" x2="380" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
                             <line x1="50" y1="250" x2="50" y2="20" stroke="#333" stroke-width="2" marker-end="url(#arrow)" />
                             <text x="380" y="275" text-anchor="end" font-size="14" fill="#3b82f6" font-weight="bold">気温 (X軸)</text>
-                            <text x="40" y="20" text-anchor="end" font-size="14" fill="#10b981" font-weight="bold">売上</text>
+                            <text x="40" y="20" text-anchor="end" font-size="14" fill="#10b981" font-weight="bold">売上 (Y軸)</text>
                             ${demoData.map((d, i) => {
                                 const x = 50 + ((d.temp - 20) / 20) * 300;
                                 const y = 250 - (d.sales / 500) * 230;
@@ -133,78 +136,171 @@ const TutorialMode = ({ onFinish }) => {
                                         <line x1="${x}" y1="250" x2="${x}" y2="${y}" stroke="#3b82f6" stroke-dasharray="4" class="animate-grow-y" />
                                         <line x1="50" y1="${y}" x2="${x}" y2="${y}" stroke="#10b981" stroke-dasharray="4" class="animate-grow-x" />
                                         <circle cx="${x}" cy="${y}" r="7" fill="#6366f1" stroke="white" stroke-width="2" class="animate-pop-point" />
+                                        <text x="${x}" y="265" text-anchor="middle" font-size="10" fill="#3b82f6" class="animate-show-text">${d.temp}</text>
+                                        <text x="35" y="${y+4}" text-anchor="end" font-size="10" fill="#10b981" class="animate-show-text">${d.sales}</text>
                                     </g>
                                 `;
                             })}
                         </svg>
+                        <p class="absolute bottom-4 right-4 text-xs text-gray-400">横軸(X)と縦軸(Y)が交わる場所に点を打ちます</p>
                     </div>
                 </div>
             `
         },
         {
-            title: "ステップ2：相関の3つのパターン",
+            title: "ステップ2：点の並び方（相関の種類）",
             content: html`
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 min-h-[50vh] items-stretch animate-fade-in-up py-8">
-                    <div class="bg-red-50 p-8 rounded-2xl border border-red-100 text-center flex flex-col justify-between shadow-sm">
-                        <div class="text-6xl mb-4">↗️</div>
+                    <!-- Positive -->
+                    <div class="bg-red-50 p-6 rounded-2xl border border-red-100 flex flex-col items-center text-center shadow-sm">
+                        <div class="h-32 w-full flex items-center justify-center mb-4">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                <path d="M15 65 L 85 15" stroke="#ef4444" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
+                                ${[{x:20,y:62},{x:35,y:52},{x:45,y:40},{x:58,y:35},{x:70,y:25},{x:82,y:18}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#ef4444" />`)}
+                            </svg>
+                        </div>
                         <h4 class="font-black text-2xl text-red-700 mb-2">正の相関</h4>
-                        <p class="text-lg text-gray-700 font-bold">右上がり</p>
-                        <p class="text-base text-gray-500 mt-2 leading-relaxed">一方が増えると、もう一方も増える傾向。</p>
-                        <p class="mt-4 bg-white py-2 rounded-lg font-bold text-red-600 shadow-sm text-sm">例：勉強と成績</p>
-                    </div>
-                    <div class="bg-green-50 p-8 rounded-2xl border border-green-100 text-center flex flex-col justify-between shadow-sm">
-                        <div class="text-6xl mb-4">↘️</div>
-                        <h4 class="font-black text-2xl text-green-700 mb-2">負の相関</h4>
-                        <p class="text-lg text-gray-700 font-bold">右下がり</p>
-                        <p class="text-base text-gray-500 mt-2 leading-relaxed">一方が増えると、もう一方は減る傾向。</p>
-                        <p class="mt-4 bg-white py-2 rounded-lg font-bold text-green-600 shadow-sm text-sm">例：スマホと成績</p>
-                    </div>
-                    <div class="bg-gray-50 p-8 rounded-2xl border border-gray-200 text-center flex flex-col justify-between shadow-sm">
-                        <div class="text-6xl mb-4">∴</div>
-                        <h4 class="font-black text-2xl text-gray-700 mb-2">相関なし</h4>
-                        <p class="text-lg text-gray-700 font-bold">バラバラ</p>
-                        <p class="text-base text-gray-500 mt-2 leading-relaxed">特に関連性が認められない状態。</p>
-                        <p class="mt-4 bg-white py-2 rounded-lg font-bold text-gray-600 shadow-sm text-sm">例：身長と成績</p>
-                    </div>
-                </div>
-            `
-        },
-        {
-            title: "ステップ3：だまされないで！「疑似相関」",
-            content: html`
-                <div class="flex flex-col items-center justify-center min-h-[60vh] space-y-10 animate-fade-in-up py-8">
-                    <div class="bg-yellow-50 border-2 border-yellow-200 text-black p-8 rounded-2xl shadow-md max-w-4xl w-full text-center">
-                        <h3 class="text-3xl lg:text-4xl font-black mb-4 flex items-center justify-center">
-                            ⚠️ 相関 ≠ 因果
-                        </h3>
-                        <p class="text-xl lg:text-2xl leading-relaxed font-bold">
-                            関係があるからといって、<br/>
-                            「一方が原因でもう一方が起きた」とは限らない！
+                        <p class="text-sm text-gray-700 font-bold mb-4">「右上がり」の並び</p>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            一方が増えると、もう一方も<span class="text-red-600 font-bold">増える</span>傾向です。<br/>
+                            （例：勉強時間と成績）
                         </p>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-6xl">
-                        <div class="bg-white p-8 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center">
-                            <div class="text-sm font-black text-red-500 mb-6 uppercase tracking-widest">誤った解釈</div>
-                            <div class="flex items-center gap-6">
-                                <div class="text-center"><div class="text-6xl mb-2">🍦</div><div class="font-bold text-sm">アイス売上</div></div>
-                                <div class="text-3xl text-red-400 font-black">➡ ?</div>
-                                <div class="text-center"><div class="text-6xl mb-2">🏊</div><div class="font-bold text-sm">水難事故</div></div>
+                    <!-- Negative -->
+                    <div class="bg-green-50 p-6 rounded-2xl border border-green-100 flex flex-col items-center text-center shadow-sm">
+                        <div class="h-32 w-full flex items-center justify-center mb-4">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                <path d="M15 15 L 85 65" stroke="#10b981" stroke-width="1" stroke-dasharray="2" opacity="0.3"/>
+                                ${[{x:20,y:18},{x:35,y:25},{x:45,y:40},{x:58,y:45},{x:70,y:55},{x:82,y:62}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#10b981" />`)}
+                            </svg>
+                        </div>
+                        <h4 class="font-black text-2xl text-green-700 mb-2">負の相関</h4>
+                        <p class="text-sm text-gray-700 font-bold mb-4">「右下がり」の並び</p>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            一方が増えると、もう一方は<span class="text-green-600 font-bold">減る</span>傾向です。<br/>
+                            （例：スマホ使用時間と成績）
+                        </p>
+                    </div>
+                    <!-- None -->
+                    <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200 flex flex-col items-center text-center shadow-sm">
+                        <div class="h-32 w-full flex items-center justify-center mb-4">
+                            <svg viewBox="0 0 100 80" class="w-3/4 overflow-visible">
+                                <line x1="10" y1="70" x2="90" y2="70" stroke="#666" stroke-width="1"/>
+                                <line x1="10" y1="70" x2="10" y2="10" stroke="#666" stroke-width="1"/>
+                                ${[{x:25,y:20},{x:40,y:60},{x:55,y:30},{x:70,y:55},{x:30,y:45},{x:75,y:25}].map(p => html`<circle cx=${p.x} cy=${p.y} r="2" fill="#666" />`)}
+                            </svg>
+                        </div>
+                        <h4 class="font-black text-2xl text-gray-700 mb-2">相関なし</h4>
+                        <p class="text-sm text-gray-700 font-bold mb-4">「バラバラ」な状態</p>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            一方が増えても、もう一方は<span class="text-gray-600 font-bold">関係なく</span>増減します。<br/>
+                            （例：身長と成績）
+                        </p>
+                    </div>
+                </div>
+            `
+        },
+        {
+            title: "ステップ3：相関係数（r）について",
+            content: html`
+                <div class="flex flex-col items-center justify-center min-h-[50vh] space-y-8 animate-fade-in-up py-8 max-w-4xl mx-auto">
+                    <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 w-full">
+                        <h3 class="text-2xl font-black text-indigo-800 mb-4 text-center">相関の「強さ」を数値化する</h3>
+                        <p class="text-gray-700 text-lg leading-relaxed mb-6">
+                            散布図の「点の集まり具合」を数字にしたものを<span class="font-bold text-indigo-600">相関係数（r）</span>と呼びます。<br/>
+                            この数字は必ず<span class="bg-white px-2 rounded shadow-sm font-mono">-1.0 から 1.0</span> の間に収まります。
+                        </p>
+                        
+                        <div class="relative py-4">
+                            <div class="h-6 w-full rounded-full bg-gradient-to-r from-green-400 via-gray-200 to-red-400 shadow-inner"></div>
+                            <div class="flex justify-between text-xs font-bold text-gray-500 mt-2 px-1">
+                                <div class="text-center w-1/5">強い負の相関<br/>(-1.0)</div>
+                                <div class="text-center w-1/5">負の相関</div>
+                                <div class="text-center w-1/5">相関なし<br/>(0.0)</div>
+                                <div class="text-center w-1/5">正の相関</div>
+                                <div class="text-center w-1/5">強い正の相関<br/>(1.0)</div>
                             </div>
-                            <p class="mt-8 text-lg font-bold text-red-600 bg-red-50 p-4 rounded-xl text-center">
-                                「アイスを食べると事故が増える」<br/>…わけではありません！
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div class="p-4 bg-white border rounded-xl shadow-sm">
+                            <h4 class="font-bold text-red-600 mb-2">1.0 に近いとき</h4>
+                            <p class="text-sm text-gray-600">点が「きれいな右上がりの直線」に近づくほど、1.0に近づきます。</p>
+                        </div>
+                        <div class="p-4 bg-white border rounded-xl shadow-sm">
+                            <h4 class="font-bold text-green-600 mb-2"> -1.0 に近いとき</h4>
+                            <p class="text-sm text-gray-600">点が「きれいな右下がりの直線」に近づくほど、-1.0に近づきます。</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+        {
+            title: "ステップ4：要注意！「疑似相関（ぎじそうかん）」",
+            content: html`
+                <div class="flex flex-col items-center justify-center min-h-[60vh] space-y-10 animate-fade-in-up py-8 max-w-5xl mx-auto">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-2xl shadow-sm w-full">
+                        <h3 class="text-2xl font-black text-yellow-800 mb-2 flex items-center">
+                            ⚠️ 「相関がある」ことと「原因である」ことは違う！
+                        </h3>
+                        <p class="text-lg text-gray-700 leading-relaxed">
+                            データ分析で最も間違えやすいのが、<span class="font-bold text-red-600">相関と因果（いんが）を混同すること</span>です。<br/>
+                            これを理解するために、「アイスの売上と水難事故」の例を見てみましょう。
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+                        <!-- Left: Wrong interpretation -->
+                        <div class="bg-white p-6 rounded-2xl shadow-md border border-red-50 flex flex-col items-center">
+                            <span class="text-xs font-bold text-red-500 mb-6 tracking-widest uppercase">間違った解釈</span>
+                            <div class="flex items-center gap-6 mb-6">
+                                <div class="text-center"><div class="text-5xl mb-2">🍦</div><div class="text-xs font-bold">アイス売上増</div></div>
+                                <div class="text-3xl text-red-500 font-black animate-pulse">➡</div>
+                                <div class="text-center"><div class="text-5xl mb-2">🏊</div><div class="text-xs font-bold">水難事故増</div></div>
+                            </div>
+                            <p class="text-sm text-gray-600 text-center leading-relaxed">
+                                「アイスを食べる人が増えたことが原因で、事故が増えたんだ！」<br/>
+                                <span class="text-red-500 font-bold">➡ そんなわけないですよね？</span>
                             </p>
                         </div>
-                        <div class="bg-white p-8 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center relative">
-                            <div class="text-sm font-black text-indigo-500 mb-6 uppercase tracking-widest">正しい解釈</div>
-                            <div class="flex flex-col items-center">
-                                <div class="text-center mb-6"><div class="text-7xl mb-1 animate-bounce-slow">☀️</div><div class="text-lg font-bold bg-yellow-100 px-3 py-1 rounded-full">気温上昇</div></div>
-                                <div class="flex gap-16">
-                                    <div class="text-center"><div class="text-5xl mb-1">🍦</div><div class="font-bold text-xs">アイス増</div></div>
-                                    <div class="text-center"><div class="text-5xl mb-1">🏊</div><div class="font-bold text-xs">水泳増</div></div>
+
+                        <!-- Right: Truth -->
+                        <div class="bg-white p-6 rounded-2xl shadow-md border-2 border-indigo-50 flex flex-col items-center relative">
+                            <span class="text-xs font-bold text-indigo-500 mb-6 tracking-widest uppercase">本当の理由</span>
+                            <div class="relative w-full h-32 mb-4">
+                                <!-- Common Cause -->
+                                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 text-center">
+                                    <div class="text-5xl animate-bounce-slow">☀️</div>
+                                    <div class="text-xs font-bold bg-yellow-100 px-3 py-1 rounded-full">気温が高い</div>
+                                </div>
+                                <!-- Arrows -->
+                                <svg class="absolute inset-0 w-full h-full text-indigo-300" overflow="visible">
+                                    <defs>
+                                        <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                            <path d="M0,0 L0,6 L9,3 z" fill="currentColor" />
+                                        </marker>
+                                    </defs>
+                                    <path d="M110 30 L 60 80" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#arrow-blue)" stroke-dasharray="4"/>
+                                    <path d="M140 30 L 190 80" fill="none" stroke="currentColor" stroke-width="2" marker-end="url(#arrow-blue)" stroke-dasharray="4"/>
+                                </svg>
+                                <!-- Effects -->
+                                <div class="absolute bottom-0 left-4 text-center">
+                                    <div class="text-4xl">🍦</div>
+                                    <div class="text-[10px] font-bold">アイス売上増</div>
+                                </div>
+                                <div class="absolute bottom-0 right-4 text-center">
+                                    <div class="text-4xl">🏊</div>
+                                    <div class="text-[10px] font-bold">プール利用増</div>
                                 </div>
                             </div>
-                            <p class="mt-8 text-lg font-bold text-indigo-700 bg-indigo-50 p-4 rounded-xl text-center">
-                                「暑い」という共通の原因があるだけ。<br/>これを<span class="text-2xl font-black">疑似相関</span>と呼びます！
+                            <p class="text-sm text-gray-700 text-center leading-relaxed mt-4">
+                                「暑い」という共通の原因によって、どちらも増えただけです。<br/>
+                                これを<span class="text-indigo-600 font-bold text-lg">疑似相関（ぎじそうかん）</span>といいます。
                             </p>
                         </div>
                     </div>
@@ -212,15 +308,18 @@ const TutorialMode = ({ onFinish }) => {
             `
         },
         {
-            title: "ミッションスタート！",
+            title: "ミッション開始！",
             content: html`
                 <div class="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-12 animate-fade-in-up py-10">
-                    <div class="text-[10rem] animate-bounce-slow">🔎</div>
+                    <div class="text-[10rem] animate-bounce-slow drop-shadow-md">🔎</div>
                     <div class="space-y-4">
-                        <h2 class="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter">準備はいいですか？</h2>
-                        <p class="text-xl lg:text-2xl text-gray-500 font-medium">データの裏に隠された真実を暴く、<br/>データ探偵の出番です！</p>
+                        <h2 class="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">データ探偵の出番です！</h2>
+                        <p class="text-xl text-gray-500 font-medium">
+                            解説で学んだことを活かして、<br/>
+                            散布図から正しい関係を見つけ出しましょう！
+                        </p>
                     </div>
-                    <button onClick=${onFinish} class="px-12 py-6 bg-indigo-600 text-white text-3xl font-black rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95">
+                    <button onClick=${onFinish} class="px-12 py-6 bg-indigo-600 text-white text-2xl font-black rounded-2xl shadow-xl hover:bg-indigo-700 transition-all active:scale-95">
                         ドリルを開始する 🚀
                     </button>
                 </div>
@@ -262,7 +361,96 @@ const TutorialMode = ({ onFinish }) => {
 }
 
 /**
- * エクストラミッション用のウィンドウ (標準的な太さに調整)
+ * ドリルクエストウィンドウ (DrillQuestWindow)
+ */
+const DrillQuestWindow = ({ quest, index, total, feedback, onSubmit, onNext, hasCleared, onRestart }) => {
+    const isMobile = window.innerWidth < 768;
+    const initialPos = isMobile ? { x: 16, y: window.innerHeight - 250 } : { x: window.innerWidth - 380, y: 80 };
+    const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
+    const [isMinimized, setIsMinimized] = useState(false);
+    
+    useEffect(() => {
+        setIsMinimized(false);
+    }, [quest.id, feedback, hasCleared]);
+
+    if (hasCleared) return null;
+
+    const isCorrect = feedback === 'correct';
+    let feedbackContent = null;
+    let icon = "🧐";
+    let statusClass = "bg-gray-100 border-l-4 border-gray-400";
+    
+    if (isCorrect) {
+        icon = "🎉";
+        statusClass = "bg-green-50 border-l-4 border-green-500";
+        feedbackContent = html`
+            <div class="space-y-3">
+                <div class="font-bold text-green-700 text-lg">正解です！</div>
+                <div class="bg-white p-3 rounded border border-green-200 text-sm text-gray-700 leading-relaxed shadow-sm">
+                    <div class="font-bold text-green-800 mb-1 flex items-center"><span class="mr-1">💡</span>探偵メモ</div>
+                    ${quest.causationNote}
+                </div>
+                <button onClick=${onNext} class="w-full py-3 bg-green-500 text-white font-bold rounded shadow hover:bg-green-600 transition-transform active:scale-95 flex justify-center items-center">
+                    <span>次のミッションへ</span> <span class="ml-2">➡</span>
+                </button>
+            </div>
+        `;
+    } else if (feedback) {
+        icon = "🤔";
+        let message = "";
+        let color = "orange";
+        if (feedback === 'incorrect') { message = `ヒント: ${quest.hint}`; color="orange"; }
+        else if (feedback === 'incorrect_dataset') { message = "まずはデータソース設定で、対象のデータセットに切り替えよう！"; color="red"; }
+        else if (feedback === 'same_variable') { message = "同じ項目同士だと相関が1.0になってしまうよ。別の項目を選ぼう。"; color="yellow"; }
+
+        statusClass = `bg-${color}-50 border-l-4 border-${color}-400`;
+        feedbackContent = html`
+            <div class="space-y-2">
+                <div class="text-${color}-800 font-bold flex items-start">
+                    <span class="mr-2 text-xl">⚠</span>
+                    <span class="text-sm mt-0.5">${message}</span>
+                </div>
+                <button onClick=${onSubmit} class="w-full py-2 bg-indigo-600 text-white font-bold rounded shadow hover:bg-indigo-700 transition-colors">
+                    再調査する
+                </button>
+            </div>
+        `;
+    } else {
+        feedbackContent = html`
+            <button onClick=${onSubmit} class="w-full py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded shadow-md hover:from-orange-600 hover:to-red-600 transition-transform active:scale-95 flex items-center justify-center">
+                <span>調査報告をする</span>
+            </button>
+        `;
+    }
+
+    return html`
+        <div class="fixed z-[90] bg-white shadow-xl rounded-xl overflow-hidden border-2 transition-all duration-300
+                   ${isCorrect ? 'border-green-400 ring-4 ring-green-100' : 'border-indigo-100'}"
+            style=${{ top: position.y, left: position.x, width: isMinimized ? '200px' : (isMobile ? 'calc(100vw - 32px)' : '350px'), maxHeight: '80vh', touchAction: 'none' }}>
+            <div class="px-4 py-2 bg-gray-900 text-white flex justify-between items-center cursor-grab active:cursor-grabbing select-none touch-none"
+                onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">${icon}</span>
+                    <span class="font-bold text-xs uppercase tracking-widest">Mission ${index + 1} / ${total}</span>
+                </div>
+                <button onClick=${() => setIsMinimized(!isMinimized)} class="p-1 hover:bg-white/20 rounded">
+                    ${isMinimized ? '□' : '－'}
+                </button>
+            </div>
+            ${!isMinimized && html`
+                <div class="p-4 flex flex-col gap-4 overflow-y-auto max-h-[60vh]">
+                    <div class="text-gray-800 font-bold text-base leading-snug">${quest.text}</div>
+                    <div class="rounded-lg p-3 ${statusClass} transition-colors duration-300">
+                        ${feedbackContent}
+                    </div>
+                </div>
+            `}
+        </div>
+    `;
+}
+
+/**
+ * エクストラミッション用のウィンドウ (ExtraMissionWindow)
  */
 const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targetR, onNext, onComplete }) => {
     const isMobile = window.innerWidth < 768;
@@ -333,7 +521,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
 }
 
 /**
- * 散布図コンポーネント (標準視認性)
+ * 散布図コンポーネント
  */
 const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onTogglePoint }) => {
     const domain = useMemo(() => {
@@ -478,7 +666,11 @@ const App = () => {
     useEffect(() => {
         if (mode === 'drill' && !hasCleared) {
             const quest = DRILL_QUESTS[currentQuestIndex];
-            if (quest) { setDatasetId(quest.datasetId); setXKey(quest.initialX); setYKey(quest.initialY); }
+            if (quest) { 
+                setDatasetId(quest.datasetId); 
+                setXKey(quest.initialX); 
+                setYKey(quest.initialY); 
+            }
             setDrillFeedback(null);
         }
     }, [currentQuestIndex, mode, hasCleared]);
@@ -497,7 +689,15 @@ const App = () => {
         else { setDrillFeedback('incorrect'); }
     };
 
-    const nextQuest = () => { setDrillFeedback(null); if (currentQuestIndex < DRILL_QUESTS.length - 1) { setCurrentQuestIndex(prev => prev + 1); } else { setHasCleared(true); setShowClearModal(true); } };
+    const nextQuest = () => { 
+        setDrillFeedback(null); 
+        if (currentQuestIndex < DRILL_QUESTS.length - 1) { 
+            setCurrentQuestIndex(prev => prev + 1); 
+        } else { 
+            setHasCleared(true); 
+            setShowClearModal(true); 
+        } 
+    };
     const restartDrill = () => { setShowClearModal(false); setHasCleared(false); setCurrentQuestIndex(0); setDrillFeedback(null); setMode('drill'); };
     const loadExtraMissionLevel = (levelIndex) => { const config = EXTRA_MISSION_STAGES[levelIndex]; setDatasetId(config.datasetId); setXKey(config.xKey); setYKey(config.yKey); setExcludedIds([]); };
     const startExtraMission = () => { setShowClearModal(false); setMode('extra'); setExtraMissionLevel(0); loadExtraMissionLevel(0); };
@@ -511,7 +711,7 @@ const App = () => {
                     <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     </div>
-                    <div><h1 class="text-xl font-black text-gray-900 tracking-tight">Data Detective</h1></div>
+                    <div><h1 class="text-xl font-black text-gray-900 tracking-tight">Data Detective Challenge</h1></div>
                 </div>
                 <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
                     <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'explanation' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}" onClick=${() => setMode('explanation')}>📚 解説</button>
@@ -521,9 +721,9 @@ const App = () => {
             </header>
 
             ${mode === 'explanation' ? html`<${TutorialMode} onFinish=${() => setMode('drill')} />` : html`
-                <main class="flex-1 flex flex-col lg:flex-row overflow-hidden p-4 md:p-6 gap-4 md:gap-6 w-full">
-                    <aside class="w-full lg:w-80 flex flex-col gap-4 shrink-0 overflow-y-auto">
-                        <${Card} title="Settings">
+                <main class="flex-1 flex flex-col lg:flex-row overflow-hidden p-4 md:p-6 gap-4 md:gap-6 w-full relative">
+                    <aside class="w-full lg:w-80 flex flex-col gap-4 shrink-0 overflow-y-auto pr-1">
+                        <${Card} title="データソース設定">
                             <div class="space-y-4">
                                 <div>
                                     <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Data Source</label>
@@ -532,20 +732,20 @@ const App = () => {
                                     </select>
                                     <p class="mt-2 text-xs text-gray-500 font-medium leading-relaxed">${dataset.description}</p>
                                 </div>
-                                <button onClick=${() => setShowDataWindow(true)} class="w-full py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">詳細表示</button>
+                                <button onClick=${() => setShowDataWindow(true)} class="w-full py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">データ一覧を表示</button>
                             </div>
                         </${Card}>
-                        <${Card} title="Variables" className="flex-1">
+                        <${Card} title="分析項目の選択" className="flex-1">
                             <div class="space-y-4">
                                 <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-50 ${mode === 'extra' ? 'opacity-50' : ''}">
-                                    <label class="block text-[10px] font-black text-blue-800 mb-2 uppercase">X-Axis</label>
+                                    <label class="block text-[10px] font-black text-blue-800 mb-2 uppercase">X軸（横軸）</label>
                                     <select class="w-full border border-blue-100 rounded-lg p-2 bg-white text-sm font-bold" value=${xKey} onChange=${e => setXKey(e.target.value)} disabled=${mode === 'extra'}>
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
                                 </div>
-                                <div class="flex justify-center"><button onClick=${handleSwapAxes} class="p-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all" disabled=${mode === 'extra'}>🔄</button></div>
+                                <div class="flex justify-center"><button onClick=${handleSwapAxes} class="p-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all" disabled=${mode === 'extra'}>🔄 軸入替</button></div>
                                 <div class="p-4 bg-green-50/50 rounded-xl border border-green-50 ${mode === 'extra' ? 'opacity-50' : ''}">
-                                    <label class="block text-[10px] font-black text-green-800 mb-2 uppercase">Y-Axis</label>
+                                    <label class="block text-[10px] font-black text-green-800 mb-2 uppercase">Y軸（縦軸）</label>
                                     <select class="w-full border border-green-100 rounded-lg p-2 bg-white text-sm font-bold" value=${yKey} onChange=${e => setYKey(e.target.value)} disabled=${mode === 'extra'}>
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
@@ -557,10 +757,10 @@ const App = () => {
                         <${Card} className="h-full shadow-md border-gray-200">
                             <div class="h-full flex flex-col">
                                 <div class="flex justify-between items-center mb-4 px-2">
-                                    <h2 class="text-lg font-black text-gray-800">散布図: <span class="text-blue-500">${xColumn.label}</span> vs <span class="text-green-500">${yColumn.label}</span></h2>
+                                    <h2 class="text-lg font-black text-gray-800"><span class="text-blue-500">${xColumn.label}</span> と <span class="text-green-500">${yColumn.label}</span> の散布図</h2>
                                     <div class="flex gap-4 text-[10px] font-black text-gray-400 uppercase">
-                                        <div class="flex items-center gap-1"><div class="w-2 h-2 bg-indigo-500 rounded"></div> Actual</div>
-                                        <div class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> Regression</div>
+                                        <div class="flex items-center gap-1"><div class="w-2 h-2 bg-indigo-500 rounded"></div> データ点</div>
+                                        <div class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> 回帰直線</div>
                                     </div>
                                 </div>
                                 <div class="flex-1"><${ScatterVis} data=${dataset.data} xConfig=${xColumn} yConfig=${yColumn} regression=${stats.regression} excludedIds=${excludedIds} onTogglePoint=${togglePoint} /></div>
@@ -568,17 +768,74 @@ const App = () => {
                         </${Card}>
                     </section>
                     <aside class="w-full lg:w-80 flex-shrink-0">
-                        <${Card} title="Analysis" className="h-full">
+                        <${Card} title="分析結果統計" className="h-full">
                             <${AnalysisPanel} xLabel=${xColumn.label} yLabel=${yColumn.label} correlation=${stats.correlation} regression=${stats.regression} strength=${stats.strength} activeCount=${stats.activeCount} totalCount=${dataset.data.length} />
                         </${Card}>
                     </aside>
+                    
+                    <!-- Drill Window Layer inside Main for correct context -->
+                    ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${DRILL_QUESTS[currentQuestIndex]} index=${currentQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} />`}
+                    ${mode === 'extra' && html`<${ExtraMissionWindow} correlation=${stats.correlation} activeCount=${stats.activeCount} stage=${extraMissionLevel} totalStages=${EXTRA_MISSION_STAGES.length} targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR} onNext=${nextExtraMission} onComplete=${finishExtraMission} />`}
                 </main>
             `}
 
-            ${mode === 'drill' && !showClearModal && html`<${DrillQuestWindow} quest=${currentQuest} index=${displayQuestIndex} total=${DRILL_QUESTS.length} feedback=${drillFeedback} onSubmit=${handleDrillSubmit} onNext=${nextQuest} hasCleared=${hasCleared} onRestart=${restartDrill} />`}
-            ${mode === 'extra' && html`<${ExtraMissionWindow} correlation=${stats.correlation} activeCount=${stats.activeCount} stage=${extraMissionLevel} totalStages=${EXTRA_MISSION_STAGES.length} targetR=${EXTRA_MISSION_STAGES[extraMissionLevel].targetR} onNext=${nextExtraMission} onComplete=${finishExtraMission} />`}
             ${showDataWindow && html`<${FloatingDataWindow} data=${dataset.data} columns=${dataset.columns} excludedIds=${excludedIds} onTogglePoint=${togglePoint} onClose=${() => setShowDataWindow(false)} />`}
             ${showClearModal && html`<${DrillClearModal} onRestart=${restartDrill} onExploration=${() => {setShowClearModal(false); setMode('exploration');}} onExtraMission=${startExtraMission} />`}
+        </div>
+    `;
+};
+
+const DrillClearModal = ({ onRestart, onExploration, onExtraMission }) => html`
+    <div class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
+            <div class="text-7xl mb-4 animate-bounce-slow">🎊</div>
+            <h2 class="text-3xl font-black text-indigo-600 mb-2">CONGRATULATIONS!</h2>
+            <p class="text-gray-700 mb-6 font-bold">全ミッション達成おめでとう！<br/>君は立派なデータマスターだ！</p>
+            <div class="space-y-3">
+                <button onClick=${onExtraMission} class="w-full py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold shadow-xl hover:scale-105 transition-all animate-pulse">
+                    🛠️ エクストラミッション：データ修正
+                </button>
+                <button onClick=${onExploration} class="w-full py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold hover:bg-indigo-100 transition-colors">
+                    📊 自由研究モードへ
+                </button>
+                <button onClick=${onRestart} class="w-full py-3 text-gray-400 font-bold hover:text-gray-600">最初からやり直す</button>
+            </div>
+        </div>
+    </div>
+`;
+
+const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose }) => {
+    const isMobile = window.innerWidth < 768;
+    const initialPos = isMobile ? { x: 10, y: 100 } : { x: 20, y: 150 };
+    const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
+    return html`
+        <div class="fixed bg-white shadow-2xl rounded-lg border border-gray-200 z-[100] flex flex-col overflow-hidden"
+            style=${{ top: position.y, left: position.x, width: isMobile ? '90vw' : '500px', height: '400px', touchAction: 'none' }}>
+            <div class="bg-gray-800 text-white px-3 py-2 cursor-grab active:cursor-grabbing flex justify-between items-center"
+                onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
+                <span class="text-xs font-bold">データ一覧 (n=${data.length})</span>
+                <button onClick=${onClose} class="hover:text-red-400 font-bold">×</button>
+            </div>
+            <div class="flex-1 overflow-auto">
+                <table class="w-full text-[10px] text-left">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="p-2 border-b">使用</th>
+                            <th class="p-2 border-b">ID</th>
+                            ${columns.map(c => html`<th class="p-2 border-b">${c.label}</th>`)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(row => html`
+                            <tr class="border-b ${excludedIds.includes(row.id) ? 'bg-gray-100 text-gray-400' : ''}">
+                                <td class="p-2 text-center"><input type="checkbox" checked=${!excludedIds.includes(row.id)} onChange=${() => onTogglePoint(row.id)} /></td>
+                                <td class="p-2">${row.id}</td>
+                                ${columns.map(c => html`<td class="p-2">${row[c.key]}</td>`)}
+                            </tr>
+                        `)}
+                    </tbody>
+                </table>
+            </div>
         </div>
     `;
 };
