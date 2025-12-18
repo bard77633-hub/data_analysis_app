@@ -83,9 +83,9 @@ const useDraggableWindow = (initialX, initialY) => {
 // --- Components ---
 
 const Card = ({ title, children, className = "" }) => html`
-    <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-100 ${className}">
-        ${title && html`<div class="px-4 py-3 bg-gray-50 border-b border-gray-100 font-bold text-gray-700">${title}</div>`}
-        <div class="p-4 flex-1 overflow-auto flex flex-col">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-100 dark:border-slate-700 ${className}">
+        ${title && html`<div class="px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 font-bold text-gray-700 dark:text-slate-200">${title}</div>`}
+        <div class="p-4 flex-1 overflow-auto flex flex-col text-gray-800 dark:text-slate-300">
             ${children}
         </div>
     </div>
@@ -638,7 +638,7 @@ const ExtraMissionWindow = ({ correlation, activeCount, stage, totalStages, targ
 /**
  * 散布図コンポーネント
  */
-const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onTogglePoint, visualMode = 'normal' }) => {
+const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onTogglePoint, visualMode = 'normal', isDark }) => {
     const domain = useMemo(() => {
         if (!data || data.length === 0) return { x: ['auto', 'auto'], y: ['auto', 'auto'] };
         const xValues = data.map(d => d[xConfig.key]);
@@ -665,32 +665,37 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
     const getCellColor = (id) => {
         const isExcluded = excludedIds.includes(id);
         if (visualMode === 'selection') {
-            // In selection mode, excludedIds are "Selected" (Highlighted)
-            return isExcluded ? '#f59e0b' : '#cbd5e1'; // Orange if selected, Grayish if not
+            return isExcluded ? '#f59e0b' : (isDark ? '#475569' : '#cbd5e1');
         } else {
-            // Normal/Cleaning mode: excludedIds are "Excluded" (Grayed out)
-            return isExcluded ? '#eee' : '#6366f1'; // Indigo if active
+            return isExcluded ? (isDark ? '#1e293b' : '#eee') : '#6366f1';
         }
     };
     
     const getCellStroke = (id) => {
         const isExcluded = excludedIds.includes(id);
         if (visualMode === 'selection') {
-            return isExcluded ? '#b45309' : '#94a3b8';
+            return isExcluded ? '#b45309' : (isDark ? '#334155' : '#94a3b8');
         } else {
-             return isExcluded ? '#ccc' : 'none';
+             return isExcluded ? (isDark ? '#334155' : '#ccc') : 'none';
         }
     }
+
+    const gridColor = isDark ? "#334155" : "#eee";
+    const axisColor = isDark ? "#94a3b8" : "#666";
+    const labelXColor = isDark ? "#60a5fa" : "#3b82f6";
+    const labelYColor = isDark ? "#34d399" : "#10b981";
 
     return html`
         <${ResponsiveContainer} width="100%" height="100%">
             <${ComposedChart} margin=${{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                <${CartesianGrid} strokeDasharray="3 3" stroke="#eee" />
+                <${CartesianGrid} strokeDasharray="3 3" stroke=${gridColor} />
                 <${XAxis} type="number" dataKey=${xConfig.key} name=${xConfig.label} domain=${domain.x}
-                    label=${{ value: xConfig.label, position: 'bottom', offset: 0, fill: '#3b82f6', fontSize: 12 }} />
+                    tick=${{fill: axisColor, fontSize: 12}}
+                    label=${{ value: xConfig.label, position: 'bottom', offset: 0, fill: labelXColor, fontSize: 12 }} />
                 <${YAxis} type="number" dataKey=${yConfig.key} name=${yConfig.label} domain=${domain.y}
-                    label=${{ value: yConfig.label, angle: -90, position: 'insideLeft', fill: '#10b981', fontSize: 12 }} />
-                <${Tooltip} cursor=${{ strokeDasharray: '3 3' }}
+                    tick=${{fill: axisColor, fontSize: 12}}
+                    label=${{ value: yConfig.label, angle: -90, position: 'insideLeft', fill: labelYColor, fontSize: 12 }} />
+                <${Tooltip} cursor=${{ strokeDasharray: '3 3', stroke: axisColor }}
                     content=${({ active, payload }) => {
                         if (active && payload && payload.length) {
                             const d = payload[0].payload;
@@ -701,22 +706,22 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
                             let statusClass = "";
                             if (visualMode === 'selection') {
                                 statusText = isExcluded ? '選択中' : '未選択';
-                                statusClass = isExcluded ? 'text-orange-600' : 'text-gray-400';
+                                statusClass = isExcluded ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400';
                             } else {
                                 statusText = isExcluded ? '除外中' : '使用中';
-                                statusClass = isExcluded ? 'text-red-500' : 'text-green-600';
+                                statusClass = isExcluded ? 'text-red-500' : 'text-green-600 dark:text-green-400';
                             }
 
                             return html`
-                                <div class="bg-white border border-gray-200 p-2 rounded shadow text-xs">
-                                    <div class="font-bold mb-1 flex justify-between gap-4">
+                                <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-2 rounded shadow text-xs">
+                                    <div class="font-bold mb-1 flex justify-between gap-4 text-gray-800 dark:text-slate-200">
                                         <span>ID: ${d.id}</span>
                                         <span class="${statusClass}">
                                             ${statusText}
                                         </span>
                                     </div>
-                                    <p class="text-blue-600">${xConfig.label}: ${d[xConfig.key]}</p>
-                                    <p class="text-green-600">${yConfig.label}: ${d[yConfig.key]}</p>
+                                    <p class="text-blue-600 dark:text-blue-400">${xConfig.label}: ${d[xConfig.key]}</p>
+                                    <p class="text-green-600 dark:text-green-400">${yConfig.label}: ${d[yConfig.key]}</p>
                                 </div>
                             `;
                         }
@@ -735,29 +740,29 @@ const ScatterVis = ({ data, xConfig, yConfig, regression, excludedIds, onToggleP
 const AnalysisPanel = ({ xLabel, yLabel, correlation, regression, strength, activeCount, totalCount }) => html`
     <div class="space-y-6">
         <div>
-            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Correlation</h3>
-            <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-50">
+            <h3 class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Correlation</h3>
+            <div class="bg-blue-50/50 dark:bg-slate-700/50 p-4 rounded-xl border border-blue-50 dark:border-slate-700">
                 <div class="flex justify-between items-baseline mb-2">
-                    <span class="text-gray-500 font-bold text-sm">相関係数 (r)</span>
-                    <span class="text-2xl font-black text-blue-700">${correlation.toFixed(3)}</span>
+                    <span class="text-gray-500 dark:text-slate-400 font-bold text-sm">相関係数 (r)</span>
+                    <span class="text-2xl font-black text-blue-700 dark:text-blue-400">${correlation.toFixed(3)}</span>
                 </div>
                 <${CorrelationMeter} r=${correlation} />
                 <div class="mt-4 text-center">
                     <span class="block w-full px-3 py-2 text-lg md:text-xl font-black rounded-lg shadow-sm 
-                        ${strength.includes('かなり強い') ? 'bg-purple-100 text-purple-800' : 
-                          strength.includes('正の') ? 'bg-red-100 text-red-800' :
-                          strength.includes('負の') ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800'}">
+                        ${strength.includes('かなり強い') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300' : 
+                          strength.includes('正の') ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
+                          strength.includes('負の') ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-gray-200 text-gray-800 dark:bg-slate-700 dark:text-slate-300'}">
                         ${strength}
                     </span>
-                    <div class="text-right text-[10px] text-gray-400 mt-1">n=${activeCount}/${totalCount}</div>
+                    <div class="text-right text-[10px] text-gray-400 dark:text-slate-500 mt-1">n=${activeCount}/${totalCount}</div>
                 </div>
             </div>
         </div>
         <div>
-            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Regression</h3>
-            <div class="bg-green-50/50 p-4 rounded-xl border border-green-50">
-                <div class="text-gray-500 font-bold text-sm mb-2">回帰式</div>
-                <div class="text-sm font-mono font-bold text-center bg-white py-3 rounded-lg border border-green-100 text-green-800 shadow-inner">
+            <h3 class="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-2">Regression</h3>
+            <div class="bg-green-50/50 dark:bg-slate-700/50 p-4 rounded-xl border border-green-50 dark:border-slate-700">
+                <div class="text-gray-500 dark:text-slate-400 font-bold text-sm mb-2">回帰式</div>
+                <div class="text-sm font-mono font-bold text-center bg-white dark:bg-slate-800 py-3 rounded-lg border border-green-100 dark:border-slate-600 text-green-800 dark:text-green-400 shadow-inner">
                     y = ${regression.slope.toFixed(2)}x ${regression.intercept >= 0 ? '+' : '-'} ${Math.abs(regression.intercept).toFixed(2)}
                 </div>
             </div>
@@ -769,10 +774,10 @@ const CorrelationMeter = ({ r }) => {
     const percentage = ((r + 1) / 2) * 100;
     return html`
         <div class="mt-2">
-            <div class="relative h-4 w-full rounded-full bg-gradient-to-r from-green-400 via-gray-200 to-red-400 shadow-inner overflow-hidden">
+            <div class="relative h-4 w-full rounded-full bg-gradient-to-r from-green-400 via-gray-200 to-red-400 shadow-inner overflow-hidden dark:opacity-80">
                 <div class="absolute top-0 bottom-0 w-1 bg-black border border-white shadow transition-all duration-700 ease-out" style=${{ left: `${percentage}%`, transform: 'translateX(-50%)' }}></div>
             </div>
-            <div class="flex justify-between text-[8px] font-bold text-gray-400 mt-1">
+            <div class="flex justify-between text-[8px] font-bold text-gray-400 dark:text-slate-500 mt-1">
                 <span>-1.0</span><span>0</span><span>1.0</span>
             </div>
         </div>
@@ -796,6 +801,9 @@ const App = () => {
     
     // Game Completion State
     const [isGameComplete, setIsGameComplete] = useState(false);
+    
+    // Check Dark Mode
+    const isDark = isGameComplete;
 
     const dataset = useMemo(() => availableDatasets.find(d => d.id === datasetId) || availableDatasets[0], [datasetId, availableDatasets]);
     const xColumn = useMemo(() => dataset.columns.find(c => c.key === xKey) || dataset.columns[0], [dataset, xKey]);
@@ -886,28 +894,29 @@ const App = () => {
     }, [mode, extraMissionLevel]);
 
     const bgClass = useMemo(() => {
-        if (isGameComplete) return 'bg-gradient-to-br from-indigo-50 to-purple-50';
+        // Parent class controls dark mode via 'dark' class
+        if (isGameComplete) return 'dark bg-slate-900';
         return 'bg-gray-50';
     }, [isGameComplete]);
 
     return html`
         <div class="h-full flex flex-col font-sans transition-all duration-1000 overflow-hidden ${bgClass}">
-            <header class="bg-white px-6 py-4 flex flex-col lg:flex-row justify-between items-center shadow-md z-10 gap-4 border-b">
+            <header class="bg-white dark:bg-slate-900 px-6 py-4 flex flex-col lg:flex-row justify-between items-center shadow-md z-10 gap-4 border-b dark:border-slate-800">
                 <div class="flex items-center space-x-4">
-                    <div class="bg-indigo-600 text-white p-2 rounded-lg shadow-sm">
+                    <div class="bg-indigo-600 dark:bg-indigo-500 text-white p-2 rounded-lg shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     </div>
                     <div>
-                        <h1 class="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                        <h1 class="text-xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
                             Data Detective Challenge
-                            ${isGameComplete && html`<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full border border-yellow-300 animate-pulse">🏆 探偵マスター</span>`}
+                            ${isGameComplete && html`<span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100 text-xs px-2 py-1 rounded-full border border-yellow-300 dark:border-yellow-700 animate-pulse">🏆 探偵マスター</span>`}
                         </h1>
                     </div>
                 </div>
-                <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
-                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'explanation' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}" onClick=${() => setMode('explanation')}>📚 解説</button>
-                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'drill' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400'}" onClick=${() => setMode('drill')}>🔎 ドリル</button>
-                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'exploration' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400'}" onClick=${() => setMode('exploration')}>📊 自由研究</button>
+                <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-lg gap-1">
+                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'explanation' ? 'bg-white text-indigo-600 shadow-sm dark:bg-slate-700 dark:text-indigo-300' : 'text-gray-400 dark:text-slate-500'}" onClick=${() => setMode('explanation')}>📚 解説</button>
+                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'drill' ? 'bg-white text-orange-600 shadow-sm dark:bg-slate-700 dark:text-orange-300' : 'text-gray-400 dark:text-slate-500'}" onClick=${() => setMode('drill')}>🔎 ドリル</button>
+                    <button class="px-6 py-2 rounded-md text-sm font-bold transition-all ${mode === 'exploration' ? 'bg-white text-green-600 shadow-sm dark:bg-slate-700 dark:text-green-300' : 'text-gray-400 dark:text-slate-500'}" onClick=${() => setMode('exploration')}>📊 自由研究</button>
                 </div>
             </header>
 
@@ -917,13 +926,13 @@ const App = () => {
                         <${Card} title="データソース設定">
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Data Source</label>
-                                    <select class="block w-full border border-gray-200 rounded-lg p-2 bg-white text-sm font-bold" value=${datasetId} onChange=${e => setDatasetId(e.target.value)} disabled=${mode === 'extra'}>
+                                    <label class="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase mb-1">Data Source</label>
+                                    <select class="block w-full border border-gray-200 dark:border-slate-600 rounded-lg p-2 bg-white dark:bg-slate-700 dark:text-white text-sm font-bold" value=${datasetId} onChange=${e => setDatasetId(e.target.value)} disabled=${mode === 'extra'}>
                                         ${availableDatasets.map(d => html`<option key=${d.id} value=${d.id}>${d.name}</option>`)}
                                     </select>
-                                    <p class="mt-2 text-xs text-gray-500 font-medium leading-relaxed">${dataset.description}</p>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-slate-400 font-medium leading-relaxed">${dataset.description}</p>
                                 </div>
-                                <button onClick=${() => setShowDataWindow(true)} class="w-full py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">データ一覧を表示</button>
+                                <button onClick=${() => setShowDataWindow(true)} class="w-full py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-sm font-bold text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-all">データ一覧を表示</button>
                             </div>
                         </${Card}>
                         
@@ -934,16 +943,16 @@ const App = () => {
                                 </div>
                             `}
                             <div class="space-y-4">
-                                <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-50 ${mode === 'extra' ? 'opacity-50' : ''}">
-                                    <label class="block text-[10px] font-black text-blue-800 mb-2 uppercase">X軸（横軸）</label>
-                                    <select class="w-full border border-blue-100 rounded-lg p-2 bg-white text-sm font-bold" value=${xKey} onChange=${e => setXKey(e.target.value)} disabled=${mode === 'extra'}>
+                                <div class="p-4 bg-blue-50/50 dark:bg-slate-700/50 rounded-xl border border-blue-50 dark:border-slate-600 ${mode === 'extra' ? 'opacity-50' : ''}">
+                                    <label class="block text-[10px] font-black text-blue-800 dark:text-blue-300 mb-2 uppercase">X軸（横軸）</label>
+                                    <select class="w-full border border-blue-100 dark:border-slate-500 rounded-lg p-2 bg-white dark:bg-slate-800 dark:text-white text-sm font-bold" value=${xKey} onChange=${e => setXKey(e.target.value)} disabled=${mode === 'extra'}>
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
                                 </div>
-                                <div class="flex justify-center"><button onClick=${handleSwapAxes} class="p-2 bg-white border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all" disabled=${mode === 'extra'}>🔄 軸入替</button></div>
-                                <div class="p-4 bg-green-50/50 rounded-xl border border-green-50 ${mode === 'extra' ? 'opacity-50' : ''}">
-                                    <label class="block text-[10px] font-black text-green-800 mb-2 uppercase">Y軸（縦軸）</label>
-                                    <select class="w-full border border-green-100 rounded-lg p-2 bg-white text-sm font-bold" value=${yKey} onChange=${e => setYKey(e.target.value)} disabled=${mode === 'extra'}>
+                                <div class="flex justify-center"><button onClick=${handleSwapAxes} class="p-2 bg-white dark:bg-slate-700 border border-gray-100 dark:border-slate-600 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-slate-600 transition-all" disabled=${mode === 'extra'}>🔄 軸入替</button></div>
+                                <div class="p-4 bg-green-50/50 dark:bg-slate-700/50 rounded-xl border border-green-50 dark:border-slate-600 ${mode === 'extra' ? 'opacity-50' : ''}">
+                                    <label class="block text-[10px] font-black text-green-800 dark:text-green-300 mb-2 uppercase">Y軸（縦軸）</label>
+                                    <select class="w-full border border-green-100 dark:border-slate-500 rounded-lg p-2 bg-white dark:bg-slate-800 dark:text-white text-sm font-bold" value=${yKey} onChange=${e => setYKey(e.target.value)} disabled=${mode === 'extra'}>
                                         ${dataset.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
                                     </select>
                                 </div>
@@ -954,13 +963,13 @@ const App = () => {
                         <${Card} className="h-full shadow-md border-gray-200">
                             <div class="h-full flex flex-col">
                                 <div class="flex justify-between items-center mb-4 px-2">
-                                    <h2 class="text-lg font-black text-gray-800"><span class="text-blue-500">${xColumn.label}</span> と <span class="text-green-500">${yColumn.label}</span> の散布図</h2>
-                                    <div class="flex gap-4 text-[10px] font-black text-gray-400 uppercase">
+                                    <h2 class="text-lg font-black text-gray-800 dark:text-slate-100"><span class="text-blue-500 dark:text-blue-400">${xColumn.label}</span> と <span class="text-green-500 dark:text-green-400">${yColumn.label}</span> の散布図</h2>
+                                    <div class="flex gap-4 text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase">
                                         <div class="flex items-center gap-1"><div class="w-2 h-2 bg-indigo-500 rounded"></div> データ点</div>
                                         <div class="flex items-center gap-1"><div class="w-2 h-2 bg-orange-500 rounded-full"></div> 回帰直線</div>
                                     </div>
                                 </div>
-                                <div class="flex-1"><${ScatterVis} data=${dataset.data} xConfig=${xColumn} yConfig=${yColumn} regression=${stats.regression} excludedIds=${excludedIds} onTogglePoint=${togglePoint} visualMode=${visualMode} /></div>
+                                <div class="flex-1"><${ScatterVis} data=${dataset.data} xConfig=${xColumn} yConfig=${yColumn} regression=${stats.regression} excludedIds=${excludedIds} onTogglePoint=${togglePoint} visualMode=${visualMode} isDark=${isDark} /></div>
                             </div>
                         </${Card}>
                     </section>
@@ -976,7 +985,7 @@ const App = () => {
                 </main>
             `}
 
-            ${showDataWindow && html`<${FloatingDataWindow} data=${dataset.data} columns=${dataset.columns} excludedIds=${excludedIds} onTogglePoint=${togglePoint} onClose=${() => setShowDataWindow(false)} visualMode=${visualMode} />`}
+            ${showDataWindow && html`<${FloatingDataWindow} data=${dataset.data} columns=${dataset.columns} excludedIds=${excludedIds} onTogglePoint=${togglePoint} onClose=${() => setShowDataWindow(false)} visualMode=${visualMode} isDark=${isDark} />`}
             ${showClearModal && html`<${DrillClearModal} onRestart=${restartDrill} onExploration=${() => {setShowClearModal(false); setMode('exploration');}} onExtraMission=${startExtraMission} />`}
         </div>
     `;
@@ -984,47 +993,47 @@ const App = () => {
 
 const DrillClearModal = ({ onRestart, onExploration, onExtraMission }) => html`
     <div class="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center relative overflow-hidden">
             <div class="text-7xl mb-4 animate-bounce-slow">🎊</div>
-            <h2 class="text-3xl font-black text-indigo-600 mb-2">CONGRATULATIONS!</h2>
-            <p class="text-gray-700 mb-6 font-bold">全ミッション達成おめでとう！<br/>君は立派なデータマスターだ！</p>
+            <h2 class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-2">CONGRATULATIONS!</h2>
+            <p class="text-gray-700 dark:text-slate-300 mb-6 font-bold">全ミッション達成おめでとう！<br/>君は立派なデータマスターだ！</p>
             <div class="space-y-3">
                 <button onClick=${onExtraMission} class="w-full py-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold shadow-xl hover:scale-105 transition-all animate-pulse">
                     🛠️ エクストラミッション：データ修正
                 </button>
-                <button onClick=${onExploration} class="w-full py-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold hover:bg-indigo-100 transition-colors">
+                <button onClick=${onExploration} class="w-full py-3 bg-indigo-50 dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-slate-600 transition-colors">
                     📊 自由研究モードへ
                 </button>
-                <button onClick=${onRestart} class="w-full py-3 text-gray-400 font-bold hover:text-gray-600">最初からやり直す</button>
+                <button onClick=${onRestart} class="w-full py-3 text-gray-400 dark:text-slate-500 font-bold hover:text-gray-600 dark:hover:text-slate-400">最初からやり直す</button>
             </div>
         </div>
     </div>
 `;
 
-const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose, visualMode }) => {
+const FloatingDataWindow = ({ data, columns, excludedIds, onTogglePoint, onClose, visualMode, isDark }) => {
     const isMobile = window.innerWidth < 768;
     const initialPos = isMobile ? { x: 10, y: 100 } : { x: 20, y: 150 };
     const { position, onPointerDown, onPointerMove, onPointerUp } = useDraggableWindow(initialPos.x, initialPos.y);
     return html`
-        <div class="fixed bg-white shadow-2xl rounded-lg border border-gray-200 z-[100] flex flex-col overflow-hidden"
+        <div class="fixed bg-white dark:bg-slate-800 shadow-2xl rounded-lg border border-gray-200 dark:border-slate-700 z-[100] flex flex-col overflow-hidden"
             style=${{ top: position.y, left: position.x, width: isMobile ? '90vw' : '500px', height: '400px', touchAction: 'none' }}>
-            <div class="bg-gray-800 text-white px-3 py-2 cursor-grab active:cursor-grabbing flex justify-between items-center"
+            <div class="bg-gray-800 dark:bg-slate-900 text-white px-3 py-2 cursor-grab active:cursor-grabbing flex justify-between items-center"
                 onPointerDown=${onPointerDown} onPointerMove=${onPointerMove} onPointerUp=${onPointerUp}>
                 <span class="text-xs font-bold">データ一覧 (n=${data.length})</span>
                 <button onClick=${onClose} class="hover:text-red-400 font-bold">×</button>
             </div>
-            <div class="flex-1 overflow-auto">
+            <div class="flex-1 overflow-auto text-gray-800 dark:text-slate-200">
                 <table class="w-full text-[10px] text-left">
-                    <thead class="bg-gray-50 sticky top-0">
+                    <thead class="bg-gray-50 dark:bg-slate-700 sticky top-0">
                         <tr>
-                            <th class="p-2 border-b">使用</th>
-                            <th class="p-2 border-b">ID</th>
-                            ${columns.map(c => html`<th key=${c.key} class="p-2 border-b">${c.label}</th>`)}
+                            <th class="p-2 border-b dark:border-slate-600">使用</th>
+                            <th class="p-2 border-b dark:border-slate-600">ID</th>
+                            ${columns.map(c => html`<th key=${c.key} class="p-2 border-b dark:border-slate-600">${c.label}</th>`)}
                         </tr>
                     </thead>
                     <tbody>
                         ${data.map(row => html`
-                            <tr key=${row.id} class="border-b ${excludedIds.includes(row.id) ? 'bg-gray-100 text-gray-400' : ''}">
+                            <tr key=${row.id} class="border-b dark:border-slate-700 ${excludedIds.includes(row.id) ? 'bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-600' : 'even:bg-gray-50 dark:even:bg-slate-800/50'}">
                                 <td class="p-2 text-center"><input type="checkbox" checked=${!excludedIds.includes(row.id)} onChange=${() => onTogglePoint(row.id)} /></td>
                                 <td class="p-2">${row.id}</td>
                                 ${columns.map(c => html`<td key=${c.key} class="p-2">${row[c.key]}</td>`)}
