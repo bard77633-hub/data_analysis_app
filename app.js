@@ -107,9 +107,11 @@ const Card = ({ title, children, className = "" }) => html`
 const TutorialMode = ({ onFinish }) => {
     const [step, setStep] = useState(0);
     const [fontScale, setFontScale] = useState(1); // 0: Small, 1: Normal, 2: Large
-    const demoData = [{ id: 1, temp: 25, sales: 150 }, { id: 2, temp: 30, sales: 280 }, { id: 3, temp: 35, sales: 400 }];
     const [plotStep, setPlotStep] = useState(0);
     const isMobile = useIsMobile();
+    
+    // State for Step 1 Demo Switching
+    const [demoType, setDemoType] = useState('positive'); // 'positive' | 'negative'
     
     // State for Step 5 Mobile Toggle
     const [step5ShowTruth, setStep5ShowTruth] = useState(false);
@@ -123,6 +125,44 @@ const TutorialMode = ({ onFinish }) => {
         const newIdx = Math.max(0, Math.min(sizes.length - 1, idx + (fontScale - 1)));
         return sizes[newIdx];
     };
+
+    // Step 1 Data
+    const demoDataPositive = [
+        { id: 1, x: 25, y: 150, xLabel: '25℃', yLabel: '150個' },
+        { id: 2, x: 30, y: 280, xLabel: '30℃', yLabel: '280個' },
+        { id: 3, x: 35, y: 400, xLabel: '35℃', yLabel: '400個' }
+    ];
+    const demoDataNegative = [
+        { id: 1, x: 1, y: 90, xLabel: '1時間', yLabel: '90点' },
+        { id: 2, x: 3, y: 60, xLabel: '3時間', yLabel: '60点' },
+        { id: 3, x: 5, y: 30, xLabel: '5時間', yLabel: '30点' }
+    ];
+
+    const currentDemoData = demoType === 'positive' ? demoDataPositive : demoDataNegative;
+    
+    // Step 1 Config
+    const demoConfig = demoType === 'positive' ? {
+        title: "例1：気温とアイス売上",
+        xLabel: "気温(℃)",
+        yLabel: "売上(個)",
+        xMin: 20, xMax: 40,
+        yMin: 0, yMax: 500,
+        yColor: "text-green-600 dark:text-green-400",
+        yFill: "#10b981", // green
+        desc: "気温が上がると、売上はどうなる？"
+    } : {
+        title: "例2：スマホ時間とテスト点数",
+        xLabel: "スマホ(時間)",
+        yLabel: "点数(点)",
+        xMin: 0, xMax: 6,
+        yMin: 0, yMax: 100,
+        yColor: "text-red-600 dark:text-red-400",
+        yFill: "#ef4444", // red
+        desc: "スマホを長時間使うと、点数はどうなる？"
+    };
+
+    const getPlotX = (val) => 50 + ((val - demoConfig.xMin) / (demoConfig.xMax - demoConfig.xMin)) * 300;
+    const getPlotY = (val) => 250 - ((val - demoConfig.yMin) / (demoConfig.yMax - demoConfig.yMin)) * 230;
 
     // SVG Diagrams for reuse
     const PositiveCorrelationSVG = html`
@@ -169,45 +209,68 @@ const TutorialMode = ({ onFinish }) => {
             title: "ステップ1：点打ち体験",
             content: html`
                 <div class="flex flex-col lg:flex-row gap-4 h-full items-center justify-center animate-fade-in-up py-2">
-                    <div class="w-full lg:w-1/3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 flex flex-col justify-center">
-                        <h4 class="font-bold ${tc('text-lg')} text-center mb-2 text-indigo-600 dark:text-indigo-400">アイス売上のデータ表</h4>
-                        <table class="w-full ${tc('text-sm')} md:${tc('text-base')} dark:text-slate-200">
-                            <thead class="bg-indigo-50 dark:bg-slate-700">
-                                <tr><th class="p-2">気温(℃)</th><th class="p-2">売上(個)</th></tr>
+                    <div class="w-full lg:w-1/3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 flex flex-col justify-center relative overflow-hidden transition-all">
+                        <div class="absolute top-0 left-0 w-full h-1 ${demoType === 'positive' ? 'bg-green-500' : 'bg-red-500'}"></div>
+                        <h4 class="font-bold ${tc('text-lg')} text-center mb-1 text-gray-800 dark:text-white transition-all">${demoConfig.title}</h4>
+                        <p class="text-center ${tc('text-xs')} text-gray-500 dark:text-slate-400 mb-2">${demoConfig.desc}</p>
+                        
+                        <table class="w-full ${tc('text-sm')} md:${tc('text-base')} dark:text-slate-200 mb-4">
+                            <thead class="bg-gray-100 dark:bg-slate-700">
+                                <tr><th class="p-2">${demoConfig.xLabel}</th><th class="p-2">${demoConfig.yLabel}</th></tr>
                             </thead>
                             <tbody class="divide-y dark:divide-slate-600">
-                                ${demoData.map((d, i) => html`
+                                ${currentDemoData.map((d, i) => html`
                                     <tr key=${d.id} class="transition-all duration-300 ${plotStep > i ? 'bg-indigo-50 dark:bg-slate-700/50' : ''}">
-                                        <td class="p-2 text-center font-mono font-bold">${d.temp}℃</td>
-                                        <td class="p-2 text-center font-mono font-bold text-green-600 dark:text-green-400">${d.sales}個</td>
+                                        <td class="p-2 text-center font-mono font-bold">${d.xLabel}</td>
+                                        <td class="p-2 text-center font-mono font-bold ${demoConfig.yColor}">${d.yLabel}</td>
                                     </tr>
                                 `)}
                             </tbody>
                         </table>
-                        <div class="mt-4 flex flex-col gap-2">
-                            <button onClick=${() => setPlotStep(prev => Math.min(prev + 1, 3))}
-                                class="px-6 py-3 bg-indigo-600 text-white rounded-xl ${tc('text-base')} font-bold hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
-                                1つずつプロット ➡
-                            </button>
-                            <button onClick=${() => setPlotStep(0)} class="text-gray-400 font-bold hover:text-gray-600 dark:hover:text-gray-300 ${tc('text-xs')}">リセット</button>
+                        
+                        <div class="flex flex-col gap-2 min-h-[100px] justify-end">
+                            ${plotStep < 3 ? html`
+                                <button onClick=${() => setPlotStep(prev => prev + 1)}
+                                    class="w-full px-6 py-3 bg-indigo-600 text-white rounded-xl ${tc('text-base')} font-bold hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
+                                    1つずつプロット ➡
+                                </button>
+                            ` : demoType === 'positive' ? html`
+                                <div class="text-center animate-fade-in-up">
+                                    <p class="text-green-600 font-bold mb-2 ${tc('text-sm')}">右上がりの傾向が見えました！</p>
+                                    <button onClick=${() => { setDemoType('negative'); setPlotStep(0); }}
+                                        class="w-full px-4 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-xl ${tc('text-base')} font-black hover:bg-indigo-50 shadow-md active:scale-95 transition-all">
+                                        次は「逆のパターン」へ ➡
+                                    </button>
+                                </div>
+                            ` : html`
+                                <div class="text-center animate-fade-in-up">
+                                    <p class="text-red-500 font-bold mb-2 ${tc('text-sm')}">今度は右下がりになりました！</p>
+                                    <div class="p-2 bg-indigo-50 dark:bg-slate-700 rounded-lg text-indigo-800 dark:text-indigo-200 font-bold ${tc('text-xs')}">
+                                        これで体験完了です。<br/>右下の「次へ」ボタンを押してください。
+                                    </div>
+                                </div>
+                            `}
+                            <button onClick=${() => setPlotStep(0)} class="text-gray-400 font-bold hover:text-gray-600 dark:hover:text-gray-300 ${tc('text-xs')} mt-1">リセット</button>
                         </div>
                     </div>
-                    <div class="w-full lg:w-3/5 h-64 md:h-auto md:aspect-video bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 relative p-4 md:p-8">
+                    
+                    <div class="w-full lg:w-3/5 h-64 md:h-auto md:aspect-video bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 relative p-4 md:p-8 transition-colors duration-500">
                         <svg viewBox="0 0 400 300" class="w-full h-full overflow-visible">
                             <line x1="50" y1="250" x2="380" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrow)" class="dark:stroke-slate-400" />
                             <line x1="50" y1="250" x2="50" y2="20" stroke="#333" stroke-width="2" marker-end="url(#arrow)" class="dark:stroke-slate-400" />
-                            <text x="380" y="275" text-anchor="end" font-size="14" fill="#3b82f6" font-weight="bold" class="dark:fill-blue-400">気温 (X軸)</text>
-                            <text x="40" y="20" text-anchor="end" font-size="14" fill="#10b981" font-weight="bold" class="dark:fill-green-400">売上 (Y軸)</text>
-                            ${demoData.map((d, i) => {
-                                const x = 50 + ((d.temp - 20) / 20) * 300;
-                                const y = 250 - (d.sales / 500) * 230;
+                            <text x="380" y="275" text-anchor="end" font-size="14" fill="#3b82f6" font-weight="bold" class="dark:fill-blue-400">${demoConfig.xLabel}</text>
+                            <text x="40" y="20" text-anchor="end" font-size="14" fill="${demoConfig.yFill}" font-weight="bold" class="dark:fill-green-400">${demoConfig.yLabel}</text>
+                            
+                            ${currentDemoData.map((d, i) => {
+                                const x = getPlotX(d.x);
+                                const y = getPlotY(d.y);
                                 return plotStep > i && html`
                                     <g key=${i}>
                                         <line x1="${x}" y1="250" x2="${x}" y2="${y}" stroke="#3b82f6" stroke-dasharray="4" class="animate-grow-y" />
-                                        <line x1="50" y1="${y}" x2="${x}" y2="${y}" stroke="#10b981" stroke-dasharray="4" class="animate-grow-x" />
+                                        <line x1="50" y1="${y}" x2="${x}" y2="${y}" stroke="${demoConfig.yFill}" stroke-dasharray="4" class="animate-grow-x" />
                                         <circle cx="${x}" cy="${y}" r="7" fill="#6366f1" stroke="white" stroke-width="2" class="animate-pop-point" />
-                                        <text x="${x}" y="265" text-anchor="middle" font-size="10" fill="#3b82f6" class="animate-show-text dark:fill-blue-300">${d.temp}</text>
-                                        <text x="35" y="${y+4}" text-anchor="end" font-size="10" fill="#10b981" class="animate-show-text dark:fill-green-300">${d.sales}</text>
+                                        <text x="${x}" y="265" text-anchor="middle" font-size="10" fill="#3b82f6" class="animate-show-text dark:fill-blue-300">${d.xLabel}</text>
+                                        <text x="35" y="${y+4}" text-anchor="end" font-size="10" fill="${demoConfig.yFill}" class="animate-show-text dark:fill-green-300">${d.yLabel}</text>
                                     </g>
                                 `;
                             })}
@@ -477,9 +540,12 @@ const TutorialMode = ({ onFinish }) => {
     
     // Step 1 check logic
     const canProceed = useMemo(() => {
-        if (step === 1 && plotStep < 3) return false;
+        if (step === 1) {
+            // ステップ1は、negativeのプロットも終わらないと進めない
+            return demoType === 'negative' && plotStep >= 3;
+        }
         return true;
-    }, [step, plotStep]);
+    }, [step, plotStep, demoType]);
 
     return html`
         <div class="flex-1 flex flex-col min-h-0 p-2 md:p-3 xl:max-w-6xl mx-auto w-full">
