@@ -362,17 +362,17 @@ const TutorialMode = ({ onFinish }) => {
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                         <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-sm flex items-center gap-4">
-                            <div class="w-16 md:w-24 shrink-0 opacity-80">${PositiveCorrelationSVG}</div>
-                            <div>
-                                <h4 class="font-bold text-red-600 dark:text-red-400 mb-1 ${tc('text-sm')} md:${tc('text-base')}">1.0 に近いとき</h4>
-                                <p class="${tc('text-xs')} md:${tc('text-sm')} text-gray-600 dark:text-slate-400">「正の相関」が強くなり、きれいな右上がりの直線に近づきます。</p>
-                            </div>
-                        </div>
-                        <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-sm flex items-center gap-4">
                              <div class="w-16 md:w-24 shrink-0 opacity-80">${NegativeCorrelationSVG}</div>
                             <div>
                                 <h4 class="font-bold text-green-600 dark:text-green-400 mb-1 ${tc('text-sm')} md:${tc('text-base')}"> -1.0 に近いとき</h4>
                                 <p class="${tc('text-xs')} md:${tc('text-sm')} text-gray-600 dark:text-slate-400">「負の相関」が強くなり、きれいな右下がりの直線に近づきます。</p>
+                            </div>
+                        </div>
+                        <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl shadow-sm flex items-center gap-4">
+                            <div class="w-16 md:w-24 shrink-0 opacity-80">${PositiveCorrelationSVG}</div>
+                            <div>
+                                <h4 class="font-bold text-red-600 dark:text-red-400 mb-1 ${tc('text-sm')} md:${tc('text-base')}">1.0 に近いとき</h4>
+                                <p class="${tc('text-xs')} md:${tc('text-sm')} text-gray-600 dark:text-slate-400">「正の相関」が強くなり、きれいな右上がりの直線に近づきます。</p>
                             </div>
                         </div>
                     </div>
