@@ -727,20 +727,22 @@ const App = () => {
                     </header>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Lecture Mode (New!) -->
+                        <!-- Lecture Mode (Updated Priority) -->
                         <div 
                             onClick=${() => setMode('lecture')}
                             class="group bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden relative md:col-span-2"
                         >
                             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity text-8xl">📝</div>
                             <div class="relative z-10">
-                                <div class="bg-indigo-100 text-indigo-700 inline-block px-3 py-1 rounded-full text-xs font-black mb-3">LECTURE</div>
+                                <div class="bg-indigo-100 text-indigo-700 inline-block px-3 py-1 rounded-full text-xs font-black mb-3 border border-indigo-200">授業プリント完全対応</div>
                                 <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-2">デジタルワークシート (解説)</h2>
-                                <p class="text-sm text-gray-500 dark:text-slate-400 mb-4">
-                                    授業プリント形式で「相関・回帰分析」の基礎知識を学びます。
-                                    穴埋め問題や、疑似相関の図解が含まれています。
+                                <p class="text-sm text-gray-500 dark:text-slate-400 mb-4 font-medium leading-relaxed">
+                                    授業で配られたプリントの内容を、動くグラフで体験しながら学べます。<br/>
+                                    相関係数の変化シミュレーターや、疑似相関の図解で深く理解しよう！
                                 </p>
-                                <span class="text-indigo-600 font-bold text-sm flex items-center group-hover:gap-2 transition-all">OPEN <span class="ml-1">→</span></span>
+                                <span class="text-white bg-indigo-600 px-4 py-2 rounded-lg font-bold text-sm inline-flex items-center group-hover:bg-indigo-700 transition-all shadow-md">
+                                    ワークシートを開く <span class="ml-2">→</span>
+                                </span>
                             </div>
                         </div>
 
@@ -755,7 +757,6 @@ const App = () => {
                                 <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-2">データ探偵ドリル</h2>
                                 <p class="text-sm text-gray-500 dark:text-slate-400 mb-4">
                                     校長先生やコンビニ店長からの依頼をデータ分析で解決しよう！
-                                    「相関」の基礎をストーリー形式で学びます。
                                 </p>
                                 <span class="text-blue-600 font-bold text-sm flex items-center group-hover:gap-2 transition-all">START <span class="ml-1">→</span></span>
                             </div>
@@ -772,7 +773,6 @@ const App = () => {
                                 <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-2">自由研究ラボ</h2>
                                 <p class="text-sm text-gray-500 dark:text-slate-400 mb-4">
                                     様々なデータセットを自由に組み合わせて相関を探そう。
-                                    回帰直線のシミュレーションも可能です。
                                 </p>
                                 <span class="text-green-600 font-bold text-sm flex items-center group-hover:gap-2 transition-all">ENTER <span class="ml-1">→</span></span>
                             </div>
