@@ -11,10 +11,9 @@ import * as MathUtils from './utils/math.js';
 
 const html = htm.bind(React.createElement);
 
-// --- Data & Config ---
+// Extra Mission Configuration with Stories
 const EXTRA_MISSION_STAGES = [
     { 
-        id: "ex_1",
         type: "cleaning",
         datasetId: "extra_cleaning_1", 
         xKey: "study_time", 
@@ -25,18 +24,16 @@ const EXTRA_MISSION_STAGES = [
         explanation: "【解説】入力ミス（外れ値）は、データ全体の分析結果を大きく歪めてしまいます。たった1つのミスデータを取り除くだけで、相関係数が劇的に改善し、正しい傾向が見えるようになったはずです。"
     },
     {
-        id: "ex_2",
         type: "selection",
         datasetId: "extra_selection_1",
-        xKey: "study_time", 
-        yKey: "score", 
+        xKey: "study_time",
+        yKey: "score",
         targetIds: [21, 22, 23],
         title: "天才肌の生徒を探せ",
         intro: "「勉強時間は短いのに、なぜか高得点を取る生徒が3人いるらしい…」そんな噂の真相を確かめます。散布図上で『勉強時間が短い（左側）＆点数が高い（上側）』エリアにいる3人のデータを特定（クリックして選択）してください！ ※紛らわしい生徒もいるので注意！",
         explanation: "【解説】散布図を使うと、集団の中で「特異な存在」を一目で見つけることができます。彼らは効率的な勉強法を知っているのかもしれません。平均的な傾向（回帰直線）から大きく外れたデータには、新しい発見が隠れていることがあります。"
     },
     { 
-        id: "ex_3",
         type: "selection",
         datasetId: "extra_selection_2", 
         xKey: "equip_weight", 
@@ -48,514 +45,110 @@ const EXTRA_MISSION_STAGES = [
     }
 ];
 
-const EXPLANATION_SLIDES = [
-    {
-        title: "データの関係を見える化しよう",
-        content: "「勉強時間」と「テストの点数」のように、2つのデータの関係を調べるときに使うのが『散布図（さんぷず）』です。点を打つことで、数字の羅列では見えない「傾向」が見えてきます。",
-        image: "📊"
-    },
-    {
-        title: "「相関」ってなに？",
-        content: "片方が増えるともう片方も増える関係を「正の相関（右上がり）」、逆に減る関係を「負の相関（右下がり）」と呼びます。関係が強ければ強いほど、点は一直線に並びます。",
-        image: "📈"
-    },
-    {
-        title: "外れ値に注意！",
-        content: "全体の傾向から大きく外れたデータを「外れ値（アウトライヤー）」と呼びます。入力ミスの場合もあれば、特別な意味を持つ重要なデータの場合もあります。",
-        image: "⚡"
-    }
-];
-
 // --- Custom Hooks ---
 
-const useGameState = () => {
-    // 永続化を廃止し、セッションのみの状態管理に変更
-    const [state, setState] = useState({ 
-        completedDrills: [], 
-        completedExtraMissions: [],
-        masterHighScore: 0 
-    });
-
-    const completeDrill = (id) => {
-        if (!state.completedDrills.includes(id)) {
-            setState(prev => ({ ...prev, completedDrills: [...prev.completedDrills, id] }));
+const useDraggableWindow = (initialX, initialY) => {
+    const getSafePosition = (x, y) => {
+        const maxX = window.innerWidth - 50;
+        const maxY = window.innerHeight - 50;
+        return {
+            x: Math.min(Math.max(0, x), maxX),
+            y: Math.min(Math.max(0, y), maxY)
+        };
+    };
+    const [position, setPosition] = useState(getSafePosition(initialX, initialY));
+    const isDragging = useRef(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
+    const onPointerDown = (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        isDragging.current = true;
+        dragOffset.current = { x: e.clientX - position.x, y: e.clientY - position.y };
+        e.currentTarget.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+        setPosition({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
+    };
+    const onPointerUp = (e) => {
+        if (isDragging.current) {
+            isDragging.current = false;
+            e.currentTarget.releasePointerCapture(e.pointerId);
         }
     };
-
-    const completeExtraMission = (id) => {
-        if (!state.completedExtraMissions?.includes(id)) {
-            setState(prev => ({ 
-                ...prev, 
-                completedExtraMissions: [...(prev.completedExtraMissions || []), id] 
-            }));
-        }
-    };
-
-    const updateMasterScore = (score) => {
-        if (score > state.masterHighScore) {
-            setState(prev => ({ ...prev, masterHighScore: score }));
-            return true;
-        }
-        return false;
-    };
-
-    return { state, completeDrill, completeExtraMission, updateMasterScore };
+    return { position, setPosition, onPointerDown, onPointerMove, onPointerUp };
 };
 
-// --- Helper Components ---
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+    return isMobile;
+};
+
+// --- Components ---
+
+const Card = ({ title, children, className = "" }) => html`
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-100 dark:border-slate-700 ${className}">
+        ${title && html`<div class="px-3 py-1.5 bg-gray-50 dark:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 font-bold text-gray-700 dark:text-slate-200 text-xs md:text-sm shrink-0">${title}</div>`}
+        <div class="p-2 md:p-3 flex-1 overflow-auto flex flex-col text-gray-800 dark:text-slate-300 text-sm md:text-base">
+            ${children}
+        </div>
+    </div>
+`;
+
+/**
+ * 紙吹雪コンポーネント (Simple CSS Confetti)
+ */
 const SimpleConfetti = () => {
-    const pieces = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
-        id: i, left: Math.random() * 100 + '%', animationDelay: Math.random() * 0.5 + 's',
-        color: ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899'][Math.floor(Math.random() * 6)]
-    })), []);
-    return html`<div class="absolute inset-0 overflow-hidden pointer-events-none z-50">${pieces.map(p => html`<div key=${p.id} class="confetti-piece" style=${{ left: p.left, animationDelay: p.animationDelay, backgroundColor: p.color }}></div>`)}</div>`;
-};
-
-/**
- * Explanation Mode (Tutorial)
- */
-const ExplanationMode = ({ onExit }) => {
-    const [step, setStep] = useState(0);
+    const pieces = useMemo(() => {
+        return Array.from({ length: 30 }).map((_, i) => {
+            const left = Math.random() * 100 + '%';
+            const animationDelay = Math.random() * 0.5 + 's';
+            const bgColors = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899'];
+            const color = bgColors[Math.floor(Math.random() * bgColors.length)];
+            return { id: i, left, animationDelay, color };
+        });
+    }, []);
 
     return html`
-        <div class="h-full flex flex-col items-center justify-center p-4 bg-indigo-50 dark:bg-gray-900 animate-fade-in-up">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 max-w-2xl w-full relative min-h-[400px] flex flex-col border border-indigo-100 dark:border-slate-700">
-                <button onClick=${onExit} class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">✕ 閉じる</button>
-                
-                <div class="flex-1 flex flex-col items-center justify-center text-center">
-                    <div class="text-6xl mb-6 animate-bounce-slow">${EXPLANATION_SLIDES[step].image}</div>
-                    <h2 class="text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-6">${EXPLANATION_SLIDES[step].title}</h2>
-                    <p class="text-xl text-gray-700 dark:text-gray-300 leading-relaxed mb-8 font-medium">${EXPLANATION_SLIDES[step].content}</p>
-                </div>
-
-                <div class="flex justify-between items-center pt-6 border-t border-gray-100 dark:border-gray-700 w-full">
-                    <button 
-                        onClick=${() => setStep(s => Math.max(0, s - 1))}
-                        disabled=${step === 0}
-                        class="px-6 py-2 rounded-lg font-bold ${step === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700'}"
-                    >
-                        ⬅ 前へ
-                    </button>
-                    <div class="flex gap-2">
-                        ${EXPLANATION_SLIDES.map((_, i) => html`
-                            <div key=${i} class="w-2.5 h-2.5 rounded-full transition-colors ${i === step ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-slate-600'}"></div>
-                        `)}
-                    </div>
-                    <button 
-                        onClick=${() => step < EXPLANATION_SLIDES.length - 1 ? setStep(s => s + 1) : onExit()}
-                        class="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all"
-                    >
-                        ${step < EXPLANATION_SLIDES.length - 1 ? '次へ ➡' : 'わかった！'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-};
-
-/**
- * Extra Mission Mode (Free Research / Advanced)
- */
-const ExtraMissionMode = ({ completedMissions, onComplete, onExit }) => {
-    const [currentMissionId, setCurrentMissionId] = useState(null);
-    const [gameState, setGameState] = useState({ 
-        selectedIds: [], 
-        excludedIds: [], 
-        showResult: false, 
-        isCleared: false 
-    });
-
-    const currentMission = useMemo(() => EXTRA_MISSION_STAGES.find(m => m.id === currentMissionId), [currentMissionId]);
-    const dataset = useMemo(() => currentMission ? DATASETS.find(d => d.id === currentMission.datasetId) : null, [currentMission]);
-
-    useEffect(() => {
-        setGameState({ selectedIds: [], excludedIds: [], showResult: false, isCleared: false });
-    }, [currentMissionId]);
-
-    const metrics = useMemo(() => {
-        if (!dataset || !currentMission) return null;
-        
-        const activeData = dataset.data.filter(d => !gameState.excludedIds.includes(d.id));
-        const xData = activeData.map(d => d[currentMission.xKey]);
-        const yData = activeData.map(d => d[currentMission.yKey]);
-        
-        const r = MathUtils.calculateCorrelation(xData, yData);
-        const regression = MathUtils.calculateRegression(xData, yData);
-        
-        return { activeData, r, regression };
-    }, [dataset, currentMission, gameState.excludedIds]);
-
-    const handlePointClick = (dataPoint) => {
-        if (gameState.showResult && gameState.isCleared) return; 
-
-        if (currentMission.type === "cleaning") {
-            const isExcluded = gameState.excludedIds.includes(dataPoint.id);
-            setGameState(prev => ({
-                ...prev,
-                excludedIds: isExcluded 
-                    ? prev.excludedIds.filter(id => id !== dataPoint.id)
-                    : [...prev.excludedIds, dataPoint.id]
-            }));
-        } else if (currentMission.type === "selection") {
-            const isSelected = gameState.selectedIds.includes(dataPoint.id);
-            setGameState(prev => ({
-                ...prev,
-                selectedIds: isSelected
-                    ? prev.selectedIds.filter(id => id !== dataPoint.id)
-                    : [...prev.selectedIds, dataPoint.id]
-            }));
-        }
-    };
-
-    const handleCheck = () => {
-        if (!currentMission || !metrics) return;
-        
-        let isSuccess = false;
-        if (currentMission.type === "cleaning") {
-            if (metrics.r >= currentMission.targetR) isSuccess = true;
-        } else if (currentMission.type === "selection") {
-            const selected = gameState.selectedIds.sort().join(',');
-            const target = currentMission.targetIds.sort().join(',');
-            if (selected === target) isSuccess = true;
-        }
-
-        setGameState(prev => ({ ...prev, showResult: true, isCleared: isSuccess }));
-        if (isSuccess) {
-            onComplete(currentMission.id);
-        }
-    };
-
-    if (!currentMissionId) {
-        return html`
-            <div class="h-full flex flex-col p-4 max-w-5xl mx-auto w-full animate-fade-in-up">
-                <div class="flex items-center justify-between mb-6">
-                    <button onClick=${onExit} class="text-gray-500 hover:bg-gray-100 p-2 rounded-lg font-bold">⬅ ホームへ戻る</button>
-                    <h2 class="text-2xl font-black text-gray-800 dark:text-white">自由研究ミッション</h2>
-                    <div class="w-20"></div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    ${EXTRA_MISSION_STAGES.map(mission => {
-                        const isCompleted = completedMissions?.includes(mission.id);
-                        return html`
-                            <button key=${mission.id} onClick=${() => setCurrentMissionId(mission.id)}
-                                class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg overflow-hidden border-2 transition-all hover:scale-[1.03] text-left flex flex-col h-full group
-                                ${isCompleted ? 'border-green-400 dark:border-green-600' : 'border-transparent hover:border-purple-400'}">
-                                <div class="h-3 bg-gradient-to-r ${isCompleted ? 'from-green-400 to-emerald-500' : 'from-purple-500 to-indigo-500'}"></div>
-                                <div class="p-6 flex-1 flex flex-col">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <span class="text-xs font-black px-2 py-1 rounded bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300">
-                                            ${mission.type === 'cleaning' ? 'LEVEL: ERROR CHECK' : 'LEVEL: DISCOVERY'}
-                                        </span>
-                                        ${isCompleted && html`<span class="text-green-500 font-black text-sm flex items-center gap-1">✅ CLEAR</span>`}
-                                    </div>
-                                    <h3 class="font-black text-xl text-gray-800 dark:text-white mb-3 group-hover:text-purple-600 transition-colors">${mission.title}</h3>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">${mission.intro}</p>
-                                </div>
-                            </button>
-                        `;
-                    })}
-                </div>
-            </div>
-        `;
-    }
-
-    const { r, regression } = metrics || {};
-    const xLabel = dataset.columns.find(c => c.key === currentMission.xKey)?.label;
-    const yLabel = dataset.columns.find(c => c.key === currentMission.yKey)?.label;
-
-    return html`
-        <div class="h-full flex flex-col p-2 md:p-4 max-w-7xl mx-auto w-full animate-fade-in-up">
-            <div class="flex items-center justify-between mb-4">
-                <button onClick=${() => setCurrentMissionId(null)} class="text-sm font-bold text-gray-500 hover:text-gray-800 flex items-center gap-1">
-                    ⬅ 一覧へ
-                </button>
-                <div class="font-black text-purple-600 dark:text-purple-400 text-sm tracking-wider">MISSION: ${currentMission.title}</div>
-            </div>
-
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border-l-8 border-purple-500 mb-6">
-                <div class="flex gap-4 items-start">
-                    <div class="text-4xl">🧪</div>
-                    <div>
-                        <div class="text-xs font-black text-purple-400 mb-1">MISSION DIRECTIVE</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100 leading-relaxed">
-                            ${currentMission.intro}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-1 flex flex-col md:flex-row gap-6 overflow-hidden min-h-0">
-                <div class="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-inner border border-gray-200 dark:border-slate-700 p-4 relative flex flex-col">
-                    ${dataset && html`
-                        <${ResponsiveContainer} width="100%" height="100%">
-                            <${ScatterChart} margin=${{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                                <${CartesianGrid} strokeDasharray="3 3" opacity=${0.3} />
-                                <${XAxis} type="number" dataKey=${currentMission.xKey} name=${xLabel} domain=${['auto', 'auto']} label=${{ value: xLabel, position: 'bottom', offset: 0 }} />
-                                <${YAxis} type="number" dataKey=${currentMission.yKey} name=${yLabel} domain=${['auto', 'auto']} label=${{ value: yLabel, angle: -90, position: 'left' }} />
-                                <${Tooltip} cursor=${{ strokeDasharray: '3 3' }} />
-                                <${Scatter} name="Data" data=${dataset.data} onClick=${handlePointClick} cursor="pointer">
-                                    ${dataset.data.map((entry, index) => {
-                                        let fill = "#6366f1";
-                                        let opacity = 1;
-                                        if (currentMission.type === "cleaning") {
-                                            if (gameState.excludedIds.includes(entry.id)) {
-                                                fill = "#ef4444"; opacity = 0.2;
-                                            }
-                                        } else if (currentMission.type === "selection") {
-                                            if (gameState.selectedIds.includes(entry.id)) {
-                                                fill = "#f59e0b";
-                                            } else {
-                                                fill = "#cbd5e1";
-                                            }
-                                        }
-                                        return html`<${Cell} key=${index} fill=${fill} opacity=${opacity} />`;
-                                    })}
-                                </${Scatter}>
-                                ${regression && html`
-                                    <${Line} 
-                                        data=${[
-                                            { [currentMission.xKey]: dataset.columns.find(c=>c.key===currentMission.xKey).min, [currentMission.yKey]: MathUtils.predictY(dataset.columns.find(c=>c.key===currentMission.xKey).min, regression.slope, regression.intercept) },
-                                            { [currentMission.xKey]: dataset.columns.find(c=>c.key===currentMission.xKey).max, [currentMission.yKey]: MathUtils.predictY(dataset.columns.find(c=>c.key===currentMission.xKey).max, regression.slope, regression.intercept) }
-                                        ]}
-                                        dataKey=${currentMission.yKey} stroke="#10b981" strokeWidth=${2} strokeDasharray="5 5" dot=${false} activeDot=${false}
-                                    />
-                                `}
-                            </${ScatterChart}>
-                        </${ResponsiveContainer}>
-                    `}
-
-                    ${gameState.isCleared && html`
-                         <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-                             <div class="text-6xl md:text-9xl opacity-90 animate-pop-in drop-shadow-lg">⭕ CLEAR!</div>
-                             <${SimpleConfetti} />
-                        </div>
-                    `}
-                </div>
-
-                <div class="md:w-80 flex flex-col gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
-                        <div class="text-center mb-6">
-                            <div class="text-xs text-gray-500 font-bold uppercase tracking-wide">Correlation Coefficient</div>
-                            <div class="text-5xl font-mono font-black text-indigo-600 dark:text-indigo-400 transition-all duration-300">
-                                ${r ? r.toFixed(3) : '---'}
-                            </div>
-                        </div>
-
-                        ${currentMission.type === 'cleaning' && html`
-                            <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center mb-4">
-                                <div class="text-xs text-red-600 dark:text-red-300 font-bold mb-1">MISSION GOAL</div>
-                                <div class="text-sm font-black text-red-700 dark:text-red-200">相関係数 ${currentMission.targetR} 以上</div>
-                            </div>
-                            <p class="text-xs text-center text-gray-500">グラフの点をクリックして<br/>外れ値を除外してください</p>
-                        `}
-
-                        ${currentMission.type === 'selection' && html`
-                            <div class="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg text-center mb-4">
-                                <div class="text-xs text-amber-600 dark:text-amber-300 font-bold mb-1">TARGETS FOUND</div>
-                                <div class="text-xl font-black text-amber-700 dark:text-amber-200">${gameState.selectedIds.length} / ${currentMission.targetIds.length}</div>
-                            </div>
-                             <p class="text-xs text-center text-gray-500">条件に合うデータをクリックして<br/>全て選択してください</p>
-                        `}
-
-                        <button onClick=${handleCheck} disabled=${gameState.isCleared}
-                            class="mt-4 w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:bg-green-500 disabled:opacity-100 disabled:shadow-none">
-                            ${gameState.isCleared ? 'ミッション達成！' : '分析実行 (CHECK)'}
-                        </button>
-                    </div>
-
-                    ${gameState.showResult && html`
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-xl border-l-4 ${gameState.isCleared ? 'border-green-500' : 'border-red-500'} animate-fade-in-up flex-1 overflow-y-auto">
-                             <h3 class="font-black ${gameState.isCleared ? 'text-green-600' : 'text-red-500'} mb-3 text-lg flex items-center gap-2">
-                                ${gameState.isCleared ? html`<span>🎉 EXCELLENT!</span>` : html`<span>⚠️ ANALYSIS FAILED</span>`}
-                            </h3>
-                            <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                                ${gameState.isCleared 
-                                    ? currentMission.explanation 
-                                    : (currentMission.type === 'cleaning' ? 'まだ相関が目標値に達していません。他にも「ありえないデータ」が隠れているかもしれません。' : '選択が正しくありません。指令をもう一度よく読み、条件に合致するデータだけを選んでください。')
-                                }
-                            </p>
-                        </div>
-                    `}
-                </div>
-            </div>
-        </div>
-    `;
-};
-
-/**
- * DrillMode (Story/Quest Mode)
- */
-const DrillMode = ({ completedDrills, onComplete, onExit }) => {
-    const [currentDrillId, setCurrentDrillId] = useState(null);
-    const [selectedX, setSelectedX] = useState("");
-    const [selectedY, setSelectedY] = useState("");
-    const [showResult, setShowResult] = useState(false);
-
-    const currentDrill = useMemo(() => DRILL_QUESTS.find(q => q.id === currentDrillId), [currentDrillId]);
-    const dataset = useMemo(() => currentDrill ? DATASETS.find(d => d.id === currentDrill.datasetId) : null, [currentDrill]);
-
-    useEffect(() => {
-        if (currentDrill) {
-            setSelectedX(currentDrill.initialX || "");
-            setSelectedY(currentDrill.initialY || "");
-            setShowResult(false);
-        }
-    }, [currentDrill]);
-
-    const handleCheckAnswer = () => {
-        if (!currentDrill) return;
-        const isTargetX = currentDrill.targetKey === selectedX;
-        const isTargetY = currentDrill.targetKey === selectedY;
-        let isCorrect = false;
-        if (isTargetX && currentDrill.validAnswers.includes(selectedY)) isCorrect = true;
-        if (isTargetY && currentDrill.validAnswers.includes(selectedX)) isCorrect = true;
-
-        if (isCorrect) onComplete(currentDrill.id);
-        setShowResult(true);
-    };
-
-    if (!currentDrillId) {
-        return html`
-            <div class="h-full flex flex-col p-4 max-w-5xl mx-auto w-full animate-fade-in-up">
-                <div class="flex items-center justify-between mb-6">
-                    <button onClick=${onExit} class="text-gray-500 hover:bg-gray-100 p-2 rounded-lg font-bold">⬅ ホームへ戻る</button>
-                    <h2 class="text-2xl font-black text-gray-800 dark:text-white">ドリル一覧</h2>
-                    <div class="w-20"></div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pb-4">
-                    ${DRILL_QUESTS.map(drill => {
-                        const isCompleted = completedDrills.includes(drill.id);
-                        return html`
-                            <button key=${drill.id} onClick=${() => setCurrentDrillId(drill.id)}
-                                class="text-left p-6 rounded-2xl border-2 transition-all shadow-sm group hover:scale-[1.01]
-                                ${isCompleted ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-white border-gray-100 hover:border-indigo-300 dark:bg-slate-800 dark:border-slate-700'}">
-                                <div class="flex items-start justify-between mb-3">
-                                    <span class="font-black text-xs px-2 py-1 rounded ${isCompleted ? 'bg-green-200 text-green-800' : 'bg-indigo-100 text-indigo-700'}">QUEST ${drill.id}</span>
-                                    ${isCompleted && html`<span class="text-2xl">✅</span>`}
-                                </div>
-                                <div class="text-base font-bold text-gray-800 dark:text-gray-100 line-clamp-3 leading-relaxed group-hover:text-indigo-600 transition-colors">${drill.text}</div>
-                            </button>
-                        `;
-                    })}
-                </div>
-            </div>
-        `;
-    }
-
-    const isCompleted = completedDrills.includes(currentDrill.id);
-    const isAnswerCorrect = showResult && (isCompleted || (() => {
-         const isTargetX = currentDrill.targetKey === selectedX;
-         const isTargetY = currentDrill.targetKey === selectedY;
-         return (isTargetX && currentDrill.validAnswers.includes(selectedY)) || (isTargetY && currentDrill.validAnswers.includes(selectedX));
-    })());
-    const regression = (dataset && selectedX && selectedY) ? MathUtils.calculateRegression(dataset.data.map(d=>d[selectedX]), dataset.data.map(d=>d[selectedY])) : null;
-    const r = (dataset && selectedX && selectedY) ? MathUtils.calculateCorrelation(dataset.data.map(d=>d[selectedX]), dataset.data.map(d=>d[selectedY])) : 0;
-
-    return html`
-        <div class="h-full flex flex-col p-2 md:p-4 max-w-7xl mx-auto w-full animate-fade-in-up">
-            <div class="flex items-center justify-between mb-2">
-                <button onClick=${() => setCurrentDrillId(null)} class="text-sm font-bold text-gray-500 hover:text-gray-800 flex items-center gap-1">⬅ 一覧へ</button>
-                <div class="font-black text-gray-400 text-xs tracking-widest">QUEST ${currentDrill.id}</div>
-            </div>
-            
-            <!-- 詳細なストーリー表示エリアの復元 -->
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border-l-8 border-indigo-500 mb-6">
-                <div class="flex gap-4 items-start">
-                    <div class="text-4xl">🕵️‍♂️</div>
-                    <div class="flex-1">
-                        <div class="text-xs font-black text-indigo-400 mb-1">CLIENT REQUEST</div>
-                        <div class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 leading-relaxed">
-                            ${currentDrill.text}
-                        </div>
-                        
-                        <div class="bg-indigo-50 dark:bg-slate-700/50 p-4 rounded-lg border border-indigo-100 dark:border-slate-600">
-                            <div class="text-xs font-black text-indigo-500 dark:text-indigo-300 mb-1">MISSION OBJECTIVE</div>
-                            <div class="font-bold text-indigo-900 dark:text-indigo-100 text-base">
-                                ${currentDrill.explicitObjective || "データから正しい関係性を見つけ出してください"}
-                            </div>
-                        </div>
-                         <div class="mt-2 text-xs text-gray-400 text-right">
-                            ヒント: ${currentDrill.hint}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-1 flex flex-col md:flex-row gap-6 overflow-hidden min-h-0">
-                <div class="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-inner border border-gray-200 dark:border-slate-700 p-4 relative flex flex-col">
-                    ${dataset && html`
-                        <${ResponsiveContainer} width="100%" height="100%">
-                            <${ScatterChart} margin=${{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                                <${CartesianGrid} strokeDasharray="3 3" opacity=${0.3} />
-                                <${XAxis} type="number" dataKey=${selectedX} name=${dataset.columns.find(c=>c.key===selectedX)?.label} domain=${['auto', 'auto']} label=${{ value: dataset.columns.find(c=>c.key===selectedX)?.label, position: 'bottom', offset: 0 }} />
-                                <${YAxis} type="number" dataKey=${selectedY} name=${dataset.columns.find(c=>c.key===selectedY)?.label} domain=${['auto', 'auto']} label=${{ value: dataset.columns.find(c=>c.key===selectedY)?.label, angle: -90, position: 'left' }} />
-                                <${Tooltip} cursor=${{ strokeDasharray: '3 3' }} />
-                                <${Scatter} name="Data" data=${dataset.data} fill="#6366f1" />
-                                ${showResult && regression && html`
-                                    <${Line} data=${[{ [selectedX]: dataset.columns.find(c=>c.key===selectedX).min, [selectedY]: MathUtils.predictY(dataset.columns.find(c=>c.key===selectedX).min, regression.slope, regression.intercept) }, { [selectedX]: dataset.columns.find(c=>c.key===selectedX).max, [selectedY]: MathUtils.predictY(dataset.columns.find(c=>c.key===selectedX).max, regression.slope, regression.intercept) }]} dataKey=${selectedY} stroke="#f97316" strokeWidth=${2} dot=${false} activeDot=${false} />
-                                `}
-                            </${ScatterChart}>
-                        </${ResponsiveContainer}>
-                    `}
-                    ${showResult && isAnswerCorrect && html`<div class="absolute inset-0 pointer-events-none flex items-center justify-center"><div class="text-6xl md:text-9xl opacity-80 animate-pop-in drop-shadow-lg">⭕</div></div>`}
-                    ${showResult && !isAnswerCorrect && html`<div class="absolute inset-0 pointer-events-none flex items-center justify-center"><div class="text-6xl md:text-9xl opacity-80 animate-pop-in drop-shadow-lg">❌</div></div>`}
-                </div>
-                <div class="md:w-80 flex flex-col gap-4">
-                    <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 mb-1">横軸 (X-Axis)</label>
-                            <select value=${selectedX} onChange=${(e) => { setSelectedX(e.target.value); setShowResult(false); }} class="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-sm font-bold text-gray-700 dark:text-white transition-shadow focus:ring-2 ring-indigo-200 outline-none">
-                                ${dataset?.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-400 mb-1">縦軸 (Y-Axis)</label>
-                            <select value=${selectedY} onChange=${(e) => { setSelectedY(e.target.value); setShowResult(false); }} class="w-full p-3 bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-sm font-bold text-gray-700 dark:text-white transition-shadow focus:ring-2 ring-indigo-200 outline-none">
-                                ${dataset?.columns.map(c => html`<option key=${c.key} value=${c.key}>${c.label}</option>`)}
-                            </select>
-                        </div>
-                        <button onClick=${handleCheckAnswer} disabled=${showResult && isAnswerCorrect} class="mt-2 w-full py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:bg-green-500 disabled:opacity-100 disabled:shadow-none">
-                            ${showResult && isAnswerCorrect ? '正解！ (CORRECT)' : '関係性をチェック'}
-                        </button>
-                    </div>
-                    ${showResult && html`
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-xl border-l-4 ${isAnswerCorrect ? 'border-green-400' : 'border-red-400'} animate-fade-in-up flex-1 overflow-y-auto">
-                            <h3 class="font-black ${isAnswerCorrect ? 'text-green-600' : 'text-red-500'} mb-3 text-lg flex items-center gap-2">
-                                ${isAnswerCorrect ? html`<span>🎉 ANALYSIS SUCCESS</span>` : html`<span>⚠️ MISMATCH</span>`}
-                            </h3>
-                            <div class="mb-4 text-sm bg-gray-50 dark:bg-slate-700 p-3 rounded-lg">
-                                <div class="flex justify-between mb-1"><span class="text-gray-500 text-xs font-bold">相関係数 (r)</span><span class="font-mono font-black">${r.toFixed(2)}</span></div>
-                                <div class="text-xs font-bold text-gray-700 dark:text-gray-300 text-right mt-1 pt-1 border-t dark:border-slate-600">${MathUtils.getCorrelationStrength(r)}</div>
-                            </div>
-                            <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed font-medium">
-                                ${isAnswerCorrect ? currentDrill.causationNote : '指定された関係性が見つかりません。ヒントを参考に、軸の組み合わせを変えてみましょう。'}
-                            </p>
-                        </div>
-                    `}
-                </div>
-            </div>
+        <div class="absolute inset-0 overflow-hidden pointer-events-none z-50">
+            ${pieces.map(p => html`
+                <div key=${p.id} class="confetti-piece" style=${{ left: p.left, animationDelay: p.animationDelay, backgroundColor: p.color }}></div>
+            `)}
         </div>
     `;
 };
 
 /**
  * 相関マスターモード (MasterMode)
+ * ランダムに生成された散布図の相関係数を当てるゲーム
+ * チュートリアル -> 練習 -> 本番 のフロー
  */
-const MasterMode = ({ onExit, highScore, onUpdateScore }) => {
+const MasterMode = ({ onExit }) => {
+    // phase: 'intro' (説明), 'practice' (練習問題), 'practice_result' (練習結果), 'game_start' (本番開始), 'playing' (回答中), 'result' (結果), 'finished' (最終スコア)
     const [phase, setPhase] = useState('intro');
     const [round, setRound] = useState(1);
     const [score, setScore] = useState(0);
     const [currentData, setCurrentData] = useState(null);
     const [userGuess, setUserGuess] = useState(0);
     const [history, setHistory] = useState([]);
-    const TOTAL_ROUNDS = 5; 
+    const TOTAL_ROUNDS = 5; // 10 -> 5 に変更
 
+    // データ生成ロジック（詳細な統計量も計算して返す）
     const generateData = () => {
         const count = 30;
+        // ランダムな相関パターンを生成
         const types = ['strong_pos', 'mod_pos', 'weak_pos', 'none', 'weak_neg', 'mod_neg', 'strong_neg'];
         const type = types[Math.floor(Math.random() * types.length)];
-        let slope = 0; let noiseLevel = 0;
+        
+        let slope = 0;
+        let noiseLevel = 0;
+        
         switch(type) {
             case 'strong_pos': slope = 1 + Math.random(); noiseLevel = 15; break;
             case 'mod_pos': slope = 0.5 + Math.random(); noiseLevel = 40; break;
@@ -565,28 +158,38 @@ const MasterMode = ({ onExit, highScore, onUpdateScore }) => {
             case 'mod_neg': slope = -0.5 - Math.random(); noiseLevel = 40; break;
             case 'strong_neg': slope = -1 - Math.random(); noiseLevel = 15; break;
         }
+
         const data = [];
         for(let i=0; i<count; i++) {
             const x = Math.random() * 100;
             const y = (x * slope) + 50 + ((Math.random() - 0.5) * 2 * noiseLevel);
             data.push({ id: i, x, y });
         }
+        
+        // 統計量の計算
         const n = data.length;
         const meanX = data.reduce((a, b) => a + b.x, 0) / n;
         const meanY = data.reduce((a, b) => a + b.y, 0) / n;
-        let sumXY = 0; let sumXX = 0; let sumYY = 0;
+        let sumXY = 0, sumXX = 0, sumYY = 0;
         data.forEach(p => {
             sumXY += (p.x - meanX) * (p.y - meanY);
             sumXX += (p.x - meanX) ** 2;
             sumYY += (p.y - meanY) ** 2;
         });
-        const covariance = sumXY / n;
-        const stdDevX = Math.sqrt(sumXX / n);
-        const stdDevY = Math.sqrt(sumYY / n);
-        const denominator = (stdDevX * stdDevY);
-        const r = denominator === 0 ? 0 : covariance / denominator;
-        return { data, r };
+        
+        const covariance = sumXY / n; // 共分散
+        const stdDevX = Math.sqrt(sumXX / n); // Xの標準偏差
+        const stdDevY = Math.sqrt(sumYY / n); // Yの標準偏差
+        const r = denominator(stdDevX * stdDevY) === 0 ? 0 : covariance / (stdDevX * stdDevY);
+
+        return { 
+            data, 
+            r, 
+            stats: { meanX, meanY, covariance, stdDevX, stdDevY } 
+        };
     };
+
+    const denominator = (val) => val === 0 ? 1 : val; // ゼロ除算防止
 
     useEffect(() => {
         if (phase === 'practice' || phase === 'game_start') {
@@ -596,12 +199,6 @@ const MasterMode = ({ onExit, highScore, onUpdateScore }) => {
         }
     }, [phase]);
 
-    useEffect(() => {
-        if (phase === 'finished') {
-            if (onUpdateScore) onUpdateScore(score);
-        }
-    }, [phase, score]);
-
     const calculatePoints = (correctR, guessR) => {
         const diff = Math.abs(correctR - guessR);
         return Math.max(0, Math.round((1 - (diff * 2)) * 100));
@@ -609,6 +206,7 @@ const MasterMode = ({ onExit, highScore, onUpdateScore }) => {
 
     const handleSubmit = () => {
         const points = calculatePoints(currentData.r, userGuess);
+        
         if (phase === 'practice') {
             setPhase('practice_result');
         } else {
@@ -620,207 +218,278 @@ const MasterMode = ({ onExit, highScore, onUpdateScore }) => {
 
     const handleNext = () => {
         if (phase === 'practice_result') {
-            setRound(1); setScore(0); setHistory([]); setPhase('game_start');
+            setRound(1);
+            setScore(0);
+            setHistory([]);
+            setPhase('game_start');
         } else if (phase === 'result') {
             if (round >= TOTAL_ROUNDS) {
                 setPhase('finished');
             } else {
-                setRound(prev => prev + 1); setCurrentData(generateData()); setUserGuess(0); setPhase('playing');
+                setRound(prev => prev + 1);
+                setCurrentData(generateData());
+                setUserGuess(0);
+                setPhase('playing');
             }
         }
     };
 
-    const handleRetry = () => { setRound(1); setScore(0); setHistory([]); setPhase('game_start'); };
+    const handleRetry = () => {
+        setRound(1);
+        setScore(0);
+        setHistory([]);
+        setPhase('game_start');
+    };
 
-    if (phase === 'intro') {
+    // 共通のゲーム画面レンダリング
+    const renderGameScreen = (isPractice) => {
+        const points = (phase === 'result' || phase === 'practice_result') ? calculatePoints(currentData.r, userGuess) : 0;
+        const isPerfect = points >= 90;
+        const isGreat = points >= 70 && points < 90;
+
         return html`
-            <div class="h-full flex flex-col items-center justify-center p-4 animate-fade-in-up bg-indigo-50 dark:bg-slate-900">
-                <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 max-w-lg w-full text-center border-2 border-indigo-200">
-                    <button onClick=${onExit} class="absolute top-4 left-4 text-gray-400 hover:text-gray-600">⬅ 戻る</button>
-                    <div class="text-6xl mb-4 animate-bounce-slow">👑</div>
-                    <h2 class="text-3xl font-black text-indigo-800 dark:text-indigo-300 mb-2">相関マスターモード</h2>
-                    <p class="text-gray-600 dark:text-slate-400 mb-6 font-bold text-sm">散布図を見て、<span class="text-indigo-600 dark:text-indigo-400 font-black text-lg">相関係数（r）</span>を目視で当ててください！</p>
-                    ${highScore > 0 && html`<div class="bg-yellow-100 border border-yellow-300 rounded-lg p-2 mb-6 animate-pulse"><div class="text-xs text-yellow-700 font-bold">YOUR BEST SCORE</div><div class="text-2xl font-black text-yellow-600">${highScore} pts</div></div>`}
-                    <button onClick=${() => setPhase('practice')} class="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-xl shadow-lg hover:scale-105 transition-all">練習問題へ進む ➡</button>
-                </div>
-            </div>
-        `;
-    }
-
-    if (phase === 'finished') {
-        const isSRank = score >= 450;
-        return html`
-            <div class="h-full flex flex-col items-center justify-center p-4 animate-fade-in-up">
-                ${isSRank && html`<${SimpleConfetti} />`}
-                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center border-2 border-indigo-500 relative">
-                    <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-2">RESULT</h2>
-                    <div class="text-6xl font-black text-indigo-600 dark:text-indigo-400 mb-2">${score} <span class="text-xl">pts</span></div>
-                    <div class="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 mb-6 max-h-48 overflow-y-auto text-sm">
-                        <table class="w-full text-left">
-                            <thead class="text-gray-500 dark:text-slate-400 border-b dark:border-slate-600"><tr><th>Round</th><th>正解</th><th>予想</th><th>Pts</th></tr></thead>
-                            <tbody class="text-gray-700 dark:text-slate-200">
-                                ${history.map((h, i) => html`<tr key=${i} class="border-b dark:border-slate-700/50"><td class="py-1">${h.round}</td><td class="font-mono font-bold">${h.r.toFixed(2)}</td><td class="font-mono">${h.guess.toFixed(2)}</td><td class="font-bold text-indigo-600 dark:text-indigo-400">+${h.points}</td></tr>`)}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="flex gap-3">
-                        <button onClick=${onExit} class="flex-1 py-3 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-300">終了</button>
-                        <button onClick=${handleRetry} class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700">もう一度挑戦</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    const points = (phase === 'result' || phase === 'practice_result') ? calculatePoints(currentData.r, userGuess) : 0;
-    const isPerfect = points >= 90;
-    
-    return html`
         <div class="h-full flex flex-col p-2 md:p-4 max-w-4xl mx-auto w-full animate-fade-in-up">
+            <!-- Header -->
             <div class="flex justify-between items-center mb-4 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
                 <div class="font-black text-xl text-gray-800 dark:text-white flex items-center gap-2">
-                    ${phase.includes('practice') ? html`<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-sm">PRACTICE</span>` : html`<span class="text-indigo-500 mr-2">ROUND</span>${round} <span class="text-sm text-gray-400">/ ${TOTAL_ROUNDS}</span>`}
+                    ${isPractice ? html`
+                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-sm">PRACTICE</span>
+                        <span>練習問題</span>
+                    ` : html`
+                        <span class="text-indigo-500 mr-2">ROUND</span>
+                        ${round} <span class="text-sm text-gray-400">/ ${TOTAL_ROUNDS}</span>
+                    `}
                 </div>
-                ${!phase.includes('practice') && html`<div class="font-black text-xl text-gray-800 dark:text-white">SCORE: <span class="text-indigo-600 dark:text-indigo-400">${score}</span></div>`}
+                ${!isPractice && html`
+                    <div class="font-black text-xl text-gray-800 dark:text-white">
+                        SCORE: <span class="text-indigo-600 dark:text-indigo-400">${score}</span>
+                    </div>
+                `}
             </div>
+
+            <!-- Scatter Plot Area -->
             <div class="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-inner border border-gray-200 dark:border-slate-700 p-2 md:p-6 mb-4 relative overflow-hidden flex flex-col justify-center">
+                 <div class="absolute top-2 left-2 text-xs font-bold text-gray-300 dark:text-slate-600">X: Variable A</div>
+                 <div class="absolute bottom-2 right-2 text-xs font-bold text-gray-300 dark:text-slate-600">Y: Variable B</div>
                  ${currentData && html`
                     <${ResponsiveContainer} width="100%" height="100%">
                         <${ScatterChart} margin=${{ top: 20, right: 20, bottom: 20, left: 20 }}>
                             <${CartesianGrid} strokeDasharray="3 3" opacity=${0.3} />
                             <${XAxis} type="number" dataKey="x" hide domain=${['auto', 'auto']} />
                             <${YAxis} type="number" dataKey="y" hide domain=${['auto', 'auto']} />
-                            <${Scatter} data=${currentData.data} fill="#8884d8">${currentData.data.map((entry, index) => html`<${Cell} key=${index} fill="#6366f1" />`)}</${Scatter}>
-                            ${(phase === 'result' || phase === 'practice_result') && html`<${Line} data=${[{ x: 0, y: MathUtils.predictY(0, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).slope, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).intercept) }, { x: 100, y: MathUtils.predictY(100, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).slope, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).intercept) }]} dataKey="y" stroke="#f97316" strokeWidth=${3} dot=${false} isAnimationActive=${true} />`}
+                            <${Scatter} data=${currentData.data} fill="#8884d8">
+                                ${currentData.data.map((entry, index) => html`
+                                    <${Cell} key=${index} fill="#6366f1" />
+                                `)}
+                            </${Scatter}>
+                            ${(phase === 'result' || phase === 'practice_result') && html`
+                                <!-- 回帰直線の表示 -->
+                                <${Line} 
+                                    data=${[
+                                        { x: 0, y: MathUtils.predictY(0, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).slope, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).intercept) },
+                                        { x: 100, y: MathUtils.predictY(100, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).slope, MathUtils.calculateRegression(currentData.data.map(d=>d.x), currentData.data.map(d=>d.y)).intercept) }
+                                    ]} 
+                                    dataKey="y" stroke="#f97316" strokeWidth=${3} dot=${false} 
+                                    isAnimationActive=${true}
+                                />
+                            `}
                         </${ScatterChart}>
                     </${ResponsiveContainer}>
                  `}
+                 
                  ${(phase === 'result' || phase === 'practice_result') && html`
-                    <div class="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up z-10 p-4">
+                    <div class="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center animate-fade-in-up z-10 p-4 overflow-y-auto">
+                        <!-- Effect: Confetti for high scores -->
                         ${isPerfect && html`<${SimpleConfetti} />`}
-                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl border-4 ${isPerfect ? 'border-yellow-400' : 'border-indigo-500'} w-full max-w-lg text-center relative">
+
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl border-4 ${isPerfect ? 'border-yellow-400' : 'border-indigo-500'} w-full max-w-lg text-center relative overflow-hidden">
+                            <!-- Excitement Badge -->
+                            ${isPerfect && html`
+                                <div class="absolute -top-10 -right-10 bg-yellow-400 text-white font-black py-10 px-10 rotate-12 shadow-lg animate-pulse">
+                                    PERFECT!!
+                                </div>
+                            `}
+                            
                             <div class="text-sm font-bold text-gray-500 dark:text-slate-400 mb-1">正解 (r)</div>
                             <div class="text-5xl font-black text-indigo-600 dark:text-indigo-400 mb-2 font-mono">${currentData.r.toFixed(2)}</div>
+                            
+                            <!-- Score Feedback -->
+                            ${isPerfect ? html`
+                                <div class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500 animate-rainbow mb-4 animate-scale-up-bounce">
+                                    PERFECT MATCH!
+                                </div>
+                            ` : isGreat ? html`
+                                <div class="text-2xl font-black text-green-500 mb-4 animate-bounce">
+                                    GREAT GUESS!
+                                </div>
+                            ` : html`<div class="h-8 mb-4"></div>`}
+
                             <div class="flex justify-between gap-4 text-sm border-b dark:border-slate-700 pb-4 mb-4">
-                                <div class="flex-1"><div class="font-bold text-gray-400 text-xs">予想</div><div class="font-mono font-bold text-xl text-gray-800 dark:text-white">${userGuess.toFixed(2)}</div></div>
-                                <div class="flex-1"><div class="font-bold text-gray-400 text-xs">誤差</div><div class="font-mono font-bold text-xl ${points > 0 ? 'text-gray-800 dark:text-white' : 'text-red-500'}">${Math.abs(currentData.r - userGuess).toFixed(2)}</div></div>
-                                ${!phase.includes('practice') && html`<div class="flex-1"><div class="font-bold text-gray-400 text-xs">Pts</div><div class="font-bold text-xl ${isPerfect ? 'text-yellow-500' : 'text-orange-500'}">+${points}</div></div>`}
+                                <div class="flex-1">
+                                    <div class="font-bold text-gray-400 text-xs">あなたの予想</div>
+                                    <div class="font-mono font-bold text-xl text-gray-800 dark:text-white">${userGuess.toFixed(2)}</div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-gray-400 text-xs">誤差</div>
+                                    <div class="font-mono font-bold text-xl ${points > 0 ? 'text-gray-800 dark:text-white' : 'text-red-500'}">${Math.abs(currentData.r - userGuess).toFixed(2)}</div>
+                                </div>
+                                ${!isPractice && html`
+                                    <div class="flex-1">
+                                        <div class="font-bold text-gray-400 text-xs">獲得ポイント</div>
+                                        <div class="font-bold text-xl ${isPerfect ? 'text-yellow-500 scale-125' : 'text-orange-500'} transition-transform">+${points}</div>
+                                    </div>
+                                `}
                             </div>
-                            <button onClick=${handleNext} class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">${phase.includes('practice') ? '本番スタート！ 🔥' : (round >= TOTAL_ROUNDS ? '最終結果を見る 🏆' : '次の問題へ ➡')}</button>
+
+                            <!-- 計算式の提示 -->
+                            <div class="bg-gray-50 dark:bg-slate-700/50 p-3 rounded-lg text-left mb-6">
+                                <div class="text-xs font-bold text-gray-500 dark:text-slate-400 mb-2 border-b dark:border-slate-600 pb-1">🧮 相関係数の計算式</div>
+                                <div class="flex items-center justify-center gap-3 text-sm md:text-base font-mono text-gray-800 dark:text-slate-200 py-2 overflow-x-auto">
+                                    <span class="font-bold italic">r</span>
+                                    <span>=</span>
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="border-b border-gray-400 dark:border-slate-500 px-2 pb-0.5 mb-0.5 text-xs text-gray-500 dark:text-slate-400">共分散 (S<sub>xy</sub>)</div>
+                                        <div class="font-bold">${currentData.stats.covariance.toFixed(1)}</div>
+                                    </div>
+                                    <span>÷</span>
+                                    <div class="flex flex-col items-center">
+                                        <div class="border-b border-gray-400 dark:border-slate-500 px-2 pb-0.5 mb-0.5 text-xs text-gray-500 dark:text-slate-400">標準偏差の積 (S<sub>x</sub> × S<sub>y</sub>)</div>
+                                        <div class="flex gap-1 items-center font-bold">
+                                            <span>${currentData.stats.stdDevX.toFixed(1)}</span>
+                                            <span class="text-xs">×</span>
+                                            <span>${currentData.stats.stdDevY.toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-2 text-center">※実際のデータに基づいた計算結果です</p>
+                            </div>
+
+                            <button onClick=${handleNext} class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">
+                                ${isPractice ? '本番スタート！ 🔥' : (round >= TOTAL_ROUNDS ? '最終結果を見る 🏆' : '次の問題へ ➡')}
+                            </button>
                         </div>
                     </div>
                  `}
             </div>
+
+            <!-- Input Area -->
             <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700">
                 <div class="flex flex-col gap-4">
                     <div class="flex justify-between items-center px-2">
-                        <span class="font-mono text-gray-400 font-bold text-xs">-1.00</span>
-                        <span class="text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-wider w-32 text-center bg-gray-50 dark:bg-slate-900 rounded-lg py-1 border dark:border-slate-700 shadow-inner">${userGuess.toFixed(2)}</span>
-                        <span class="font-mono text-gray-400 font-bold text-xs">1.00</span>
+                        <div class="text-center">
+                            <span class="font-mono text-gray-400 font-bold block text-xs">完全な負</span>
+                            <span class="font-mono text-gray-500 font-bold">-1.00</span>
+                        </div>
+                        <span class="text-4xl font-black text-indigo-600 dark:text-indigo-400 font-mono tracking-wider w-32 text-center bg-gray-50 dark:bg-slate-900 rounded-lg py-1 border dark:border-slate-700 shadow-inner">
+                            ${userGuess.toFixed(2)}
+                        </span>
+                        <div class="text-center">
+                            <span class="font-mono text-gray-400 font-bold block text-xs">完全な正</span>
+                            <span class="font-mono text-gray-500 font-bold">1.00</span>
+                        </div>
                     </div>
-                    <input type="range" min="-1" max="1" step="0.01" value=${userGuess} onInput=${(e) => setUserGuess(parseFloat(e.target.value))} disabled=${phase.includes('result')} class="w-full h-4 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
-                    <button onClick=${handleSubmit} disabled=${phase.includes('result')} class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-xl shadow-md hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">決定</button>
+                    <input type="range" min="-1" max="1" step="0.01" value=${userGuess} 
+                        onInput=${(e) => setUserGuess(parseFloat(e.target.value))}
+                        disabled=${phase === 'result' || phase === 'practice_result'}
+                        class="w-full h-4 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                    
+                    <button onClick=${handleSubmit} disabled=${phase === 'result' || phase === 'practice_result'}
+                        class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-xl shadow-md hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        決定
+                    </button>
                 </div>
             </div>
         </div>
-    `;
-};
+        `;
+    };
 
-/**
- * Main App Component
- */
-const App = () => {
-    // Mode: 'home', 'explanation', 'drill', 'extra', 'master'
-    const [mode, setMode] = useState('home');
-    const { state, completeDrill, completeExtraMission, updateMasterScore } = useGameState();
-
-    const renderHome = () => html`
-        <div class="h-full flex flex-col p-4 bg-gray-50 dark:bg-gray-900 animate-fade-in-up overflow-y-auto">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-black text-indigo-600 dark:text-indigo-400">Data Challenge</h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">データ分析・活用スキル学習アプリ</p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 max-w-4xl mx-auto w-full flex-1 content-start">
-                
-                <!-- 1. 解説モード -->
-                <button onClick=${() => setMode('explanation')} 
-                    class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-lg border-b-4 border-indigo-200 dark:border-indigo-900 hover:border-indigo-400 hover:translate-y-1 transition-all flex flex-col items-center justify-center gap-2 group h-40">
-                    <div class="text-5xl group-hover:scale-110 transition-transform">🎓</div>
-                    <div class="font-black text-lg text-gray-700 dark:text-white">解説モード</div>
-                    <div class="text-xs text-gray-400 font-bold">まずはここから！</div>
-                </button>
-
-                <!-- 2. ドリルモード -->
-                <button onClick=${() => setMode('drill')} 
-                    class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-lg border-b-4 border-blue-200 dark:border-blue-900 hover:border-blue-400 hover:translate-y-1 transition-all flex flex-col items-center justify-center gap-2 group h-40 relative overflow-hidden">
-                    <div class="text-5xl group-hover:scale-110 transition-transform">🔍</div>
-                    <div class="font-black text-lg text-gray-700 dark:text-white relative z-10">ドリルモード</div>
-                    <div class="text-xs text-blue-500 font-bold bg-blue-50 px-2 py-0.5 rounded-full relative z-10">
-                        ${state.completedDrills.length} / ${DRILL_QUESTS.length} クリア
-                    </div>
-                </button>
-
-                <!-- 3. 自由研究（応用）モード -->
-                <button onClick=${() => setMode('extra')} 
-                    class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-lg border-b-4 border-purple-200 dark:border-purple-900 hover:border-purple-400 hover:translate-y-1 transition-all flex flex-col items-center justify-center gap-2 group h-40">
-                    <div class="text-5xl group-hover:scale-110 transition-transform">🧪</div>
-                    <div class="font-black text-lg text-gray-700 dark:text-white">自由研究</div>
-                    <div class="text-xs text-purple-500 font-bold bg-purple-50 px-2 py-0.5 rounded-full">
-                        ${state.completedExtraMissions?.length || 0} / ${EXTRA_MISSION_STAGES.length} クリア
-                    </div>
-                </button>
-
-                <!-- 4. マスターモード -->
-                <button onClick=${() => setMode('master')} 
-                    class="bg-gradient-to-br from-indigo-600 to-purple-600 p-4 rounded-2xl shadow-lg border-b-4 border-indigo-800 hover:border-indigo-600 hover:translate-y-1 transition-all flex flex-col items-center justify-center gap-2 group h-40 col-span-2 text-white">
-                    <div class="flex items-center gap-3">
-                        <div class="text-5xl group-hover:rotate-12 transition-transform">👑</div>
-                        <div class="text-left">
-                            <div class="font-black text-2xl">マスターモード</div>
-                            <div class="text-xs text-indigo-200 font-bold">上級者向け：目視で相関を当てろ！</div>
-                            <div class="mt-1 inline-block bg-white/20 px-2 py-0.5 rounded text-xs font-mono">
-                                BEST: ${state.masterHighScore} pts
-                            </div>
+    // チュートリアル画面
+    if (phase === 'intro') {
+        return html`
+            <div class="h-full flex flex-col items-center justify-center p-4 animate-fade-in-up bg-indigo-50 dark:bg-slate-900">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 max-w-lg w-full text-center border-2 border-indigo-200">
+                    <div class="text-6xl mb-4 animate-bounce-slow">👑</div>
+                    <h2 class="text-3xl font-black text-indigo-800 dark:text-indigo-300 mb-2">相関マスターモード</h2>
+                    <p class="text-gray-600 dark:text-slate-400 mb-6 font-bold text-sm">
+                        これは「データ探偵」の最終試験です。<br/>
+                        ランダムに表示される散布図を見て、<br/>
+                        その<span class="text-indigo-600 dark:text-indigo-400 font-black text-lg">相関係数（r）</span>を目視で当ててください！
+                    </p>
+                    
+                    <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 mb-6 text-left space-y-2 text-sm border border-gray-200 dark:border-slate-600">
+                        <div class="flex items-start gap-2">
+                            <span class="text-xl">🎯</span>
+                            <div><span class="font-bold">ルール：</span>全${TOTAL_ROUNDS}問のスコアアタック形式</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-xl">📏</span>
+                            <div><span class="font-bold">操作：</span>スライダーを動かして数値を予想</div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-xl">💯</span>
+                            <div><span class="font-bold">得点：</span>正解に近いほど高得点（誤差0.5以上は0点）</div>
                         </div>
                     </div>
-                </button>
-            </div>
-            
-            <div class="mt-4 text-center text-xs text-gray-400">
-                ※リロードするとデータはリセットされます
-            </div>
-        </div>
-    `;
 
-    return html`
-        <div class="w-full h-full text-gray-800 dark:text-gray-200">
-            ${mode === 'home' && renderHome()}
-            ${mode === 'explanation' && html`<${ExplanationMode} onExit=${() => setMode('home')} />`}
-            ${mode === 'drill' && html`
-                <${DrillMode} 
-                    completedDrills=${state.completedDrills} 
-                    onComplete=${completeDrill} 
-                    onExit=${() => setMode('home')} 
-                />
-            `}
-            ${mode === 'extra' && html`
-                <${ExtraMissionMode} 
-                    completedMissions=${state.completedExtraMissions}
-                    onComplete=${completeExtraMission}
-                    onExit=${() => setMode('home')}
-                />
-            `}
-            ${mode === 'master' && html`
-                <${MasterMode} 
-                    highScore=${state.masterHighScore}
-                    onUpdateScore=${updateMasterScore}
-                    onExit=${() => setMode('home')} 
-                />
-            `}
-        </div>
-    `;
+                    <button onClick=${() => setPhase('practice')} class="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-bold text-xl shadow-lg hover:scale-105 transition-all">
+                        練習問題へ進む ➡
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    if (phase === 'finished') {
+        const getRank = (s) => {
+            // 500点満点ベース
+            if (s >= 450) return "S (神の目)"; // 9割
+            if (s >= 400) return "A (データマスター)"; // 8割
+            if (s >= 300) return "B (一人前)"; // 6割
+            return "C (修行中)";
+        };
+        const isSRank = score >= 450;
+
+        return html`
+            <div class="h-full flex flex-col items-center justify-center p-4 animate-fade-in-up">
+                ${isSRank && html`<${SimpleConfetti} />`}
+                <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-lg w-full text-center border-2 border-indigo-500 relative">
+                    ${isSRank && html`
+                        <div class="absolute -top-6 -right-6 text-6xl animate-bounce-slow z-20">🏆</div>
+                    `}
+                    <h2 class="text-2xl font-black text-gray-800 dark:text-white mb-2">RESULT</h2>
+                    <div class="text-6xl font-black text-indigo-600 dark:text-indigo-400 mb-2">${score} <span class="text-xl">pts</span></div>
+                    <div class="text-xl font-bold text-gray-600 dark:text-slate-300 mb-6">Rank: ${getRank(score)}</div>
+                    
+                    <div class="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-4 mb-6 max-h-48 overflow-y-auto text-sm">
+                        <table class="w-full text-left">
+                            <thead class="text-gray-500 dark:text-slate-400 border-b dark:border-slate-600">
+                                <tr><th>Round</th><th>正解</th><th>予想</th><th>Pts</th></tr>
+                            </thead>
+                            <tbody class="text-gray-700 dark:text-slate-200">
+                                ${history.map((h, i) => html`
+                                    <tr key=${i} class="border-b dark:border-slate-700/50">
+                                        <td class="py-1">${h.round}</td>
+                                        <td class="font-mono font-bold">${h.r.toFixed(2)}</td>
+                                        <td class="font-mono">${h.guess.toFixed(2)}</td>
+                                        <td class="font-bold text-indigo-600 dark:text-indigo-400">+${h.points}</td>
+                                    </tr>
+                                `)}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onClick=${onExit} class="flex-1 py-3 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-300 dark:hover:bg-slate-600">
+                            終了
+                        </button>
+                        <button onClick=${handleRetry} class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 hover:scale-105 transition-all">
+                            もう一度挑戦
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    return renderGameScreen(phase === 'practice' || phase === 'practice_result');
 };
-
-const root = createRoot(document.getElementById('root'));
-root.render(html`<${App} />`);
